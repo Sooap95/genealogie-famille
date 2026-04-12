@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<title>Machine à Voyager dans le Temps — Généalogie Tourdot-Cherrier</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;height:100dvh;overflow:hidden;font-family:'Source Sans Pro',sans-serif;-webkit-text-size-adjust:100%;touch-action:manipulation}
+
+/* ── INTRO ── */
+#intro{position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;background:radial-gradient(ellipse at 40% 40%,#1a1040 0%,#050310 60%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+.star-bg span{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:twinkle var(--d,3s) infinite alternate}
+@keyframes twinkle{0%{opacity:.1}100%{opacity:.9}}
+#intro h1{font-family:'Playfair Display',serif;font-size:clamp(24px,4.5vw,42px);color:#f5e6c8;line-height:1.3;margin-bottom:14px;position:relative;text-shadow:0 0 40px rgba(196,160,48,.4)}
+#intro p{font-size:15px;color:#a08878;max-width:520px;line-height:1.7;margin-bottom:26px;font-weight:600;position:relative}
+#intro-btn{position:relative;background:linear-gradient(135deg,#c4a030,#f0d060);border:none;padding:14px 40px;border-radius:50px;font-family:'Playfair Display',serif;font-size:20px;color:#1a1000;cursor:pointer;box-shadow:0 4px 24px rgba(196,160,48,.45);transition:transform .15s,box-shadow .15s}
+#intro-btn:hover{transform:scale(1.05);box-shadow:0 6px 32px rgba(196,160,48,.6)}
+.intro-stats{position:relative;display:flex;gap:24px;margin-top:18px;flex-wrap:wrap;justify-content:center}
+.intro-stat b{display:block;font-family:'Playfair Display',serif;font-size:28px;color:#f0d060}
+.intro-stat span{font-size:11px;color:#7a6858;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+
+/* ── MAP ── */
+#map{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:1;background:#050310}
+#header{position:fixed;top:0;left:0;right:0;z-index:10;padding:10px 18px;background:linear-gradient(to bottom,rgba(8,4,20,.92) 0%,transparent 100%);display:flex;align-items:center;gap:14px;pointer-events:none}
+#header h1{font-family:'Playfair Display',serif;font-size:20px;color:#f5e6c8;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+#header p{font-size:12px;color:#9a8878;font-weight:700}
+#filter-btn{pointer-events:all;margin-left:auto;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#c8b898;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:'Source Sans Pro',sans-serif;font-size:12px;font-weight:700;transition:background .15s}
+#filter-btn:hover{background:rgba(255,255,255,.14)}
+
+/* ── STORY PANEL ── */
+#story{position:fixed;top:0;left:0;bottom:110px;z-index:20;width:380px;background:rgba(10,6,24,.98);border-right:1px solid rgba(255,255,255,.08);overflow-y:auto;-webkit-overflow-scrolling:touch;transform:translateX(-105%);transition:transform .35s cubic-bezier(.4,0,.2,1);scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent}
+#story.open{transform:translateX(0)}
+#story-close{position:absolute;top:12px;right:12px;z-index:2;background:rgba(255,255,255,.08);border:none;color:#c8b898;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+#story-close:hover{background:rgba(255,255,255,.16)}
+.s-header{padding:22px 18px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.s-badge{display:inline-block;padding:3px 10px;border-radius:20px;margin-bottom:8px;font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+.s-name{font-family:'Playfair Display',serif;font-size:22px;color:#f5e6c8;line-height:1.2;margin-bottom:4px}
+.s-dates{font-size:12px;color:#8a7868;font-weight:700;margin-bottom:8px}
+.s-relation{padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.05);font-size:12px;color:#c8b898;font-weight:600;line-height:1.4}
+
+.s-img-wrap{margin:0;overflow:hidden;max-height:180px;position:relative;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.08)}
+.s-img-wrap img{width:100%;max-height:180px;object-fit:cover;display:block;opacity:.85;transition:opacity .3s}
+.s-img-wrap img:hover{opacity:1}
+.s-img-cap{position:absolute;bottom:0;left:0;right:0;padding:6px 10px;background:linear-gradient(transparent,rgba(0,0,0,.75));font-size:10px;color:#c8b898;font-weight:600;line-height:1.35}
+
+.s-body{padding:14px 18px 20px}
+.s-block{margin-bottom:10px;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.s-block-icon{font-size:14px;margin-bottom:4px;color:#8a7a6a}
+.s-block-title{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6a5a4a;margin-bottom:5px}
+.s-block-text{font-size:13px;color:#c8b8a8;line-height:1.6}
+.s-funfact{margin-bottom:10px;padding:12px 14px;border-radius:10px;background:rgba(196,160,48,.06);border:1px solid rgba(196,160,48,.18)}
+.s-funfact .s-block-title{color:#b09028}
+.s-funfact .s-block-text{color:#e8d080}
+.celeb{display:flex;align-items:flex-start;gap:10px;margin-top:6px}
+.celeb-av{width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:#fff}
+.celeb-info{font-size:12.5px;color:#c8b8a8;line-height:1.55}
+.celeb-name{font-weight:800;color:#f0d888;font-size:13px}
+
+.s-music{margin-bottom:10px;padding:12px 14px;border-radius:10px;background:rgba(96,50,180,.06);border:1px solid rgba(96,50,180,.18)}
+.s-music .s-block-title{color:#9060c0}
+.s-music-desc{font-size:12px;color:#b090d8;line-height:1.5;margin-bottom:8px}
+.music-links{display:flex;flex-direction:column;gap:5px}
+.music-link{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(96,50,180,.18);text-decoration:none;transition:background .15s}
+.music-link:hover{background:rgba(96,50,180,.12);border-color:rgba(96,50,180,.35)}
+.music-link-badge{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;background:rgba(96,50,180,.2);color:#c0a0e8}
+.music-link-info{flex:1;min-width:0}
+.music-link-title{font-size:12px;font-weight:700;color:#d0b0f8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.music-link-sub{font-size:10px;color:#8060a8;font-weight:700}
+.music-link-yt{font-size:9.5px;color:#6040a0;font-weight:800;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+
+/* ── TIMELINE ── */
+#tl{position:fixed;bottom:0;left:0;right:0;z-index:10;height:110px;background:linear-gradient(to top,rgba(8,4,20,1) 0%,rgba(8,4,20,.96) 65%,transparent 100%);padding:8px 18px 10px;display:flex;flex-direction:column;gap:4px}
+#epoch-bar{display:flex;height:20px;border-radius:5px;overflow:hidden;cursor:pointer}
+.ep-seg{display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:rgba(255,255,255,.65);white-space:nowrap;padding:0 3px;transition:filter .2s}
+.ep-seg:hover{filter:brightness(1.25)}
+#dot-row{height:22px;position:relative}
+.tl-dot{position:absolute;width:10px;height:10px;border-radius:50%;transform:translate(-50%,6px);cursor:pointer;border:1.5px solid rgba(255,255,255,.25);transition:transform .15s,box-shadow .15s;z-index:2}
+.tl-dot:hover,.tl-dot.active{transform:translate(-50%,2px) scale(1.7);box-shadow:0 0 10px currentColor}
+#yr-row{display:flex;align-items:center;gap:10px}
+#yr-lbl{font-family:'Playfair Display',serif;font-size:24px;color:#f0d060;min-width:56px}
+#yr-sl{flex:1;height:4px;border-radius:2px;cursor:pointer;accent-color:#c4a030;-webkit-appearance:none;background:rgba(255,255,255,.12)}
+#yr-sl::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#c4a030;cursor:pointer;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 8px rgba(196,160,48,.6)}
+#yr-hint{font-size:11px;color:#6a5a4a;font-weight:700;white-space:nowrap}
+
+/* ── POPUPS ── */
+.leaflet-popup-content-wrapper{background:rgba(10,6,24,.97)!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:10px!important;box-shadow:0 8px 28px rgba(0,0,0,.6)!important;padding:0!important}
+.leaflet-popup-content{margin:0!important}
+.leaflet-popup-tip{background:rgba(10,6,24,.97)!important}
+.pop-inner{padding:11px 15px}
+.pop-name{font-family:'Playfair Display',serif;font-size:15px;color:#f5e6c8;margin-bottom:2px}
+.pop-sub{font-size:11px;color:#8a7868;font-weight:700;margin-bottom:8px}
+.pop-btn{width:100%;padding:7px 10px;background:rgba(196,160,48,.12);border:1px solid rgba(196,160,48,.28);border-radius:7px;color:#f0d060;font-family:'Source Sans Pro',sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:background .15s}
+.pop-btn:hover{background:rgba(196,160,48,.22)}
+
+/* ── FILTER PANEL ── */
+#filter-panel{position:fixed;bottom:120px;right:14px;z-index:15;background:rgba(10,6,24,.95);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;font-size:11px;display:none;min-width:200px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#filter-panel.vis{display:block}
+#filter-panel h3{font-family:'Playfair Display',serif;font-size:13px;color:#f5e6c8;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.08)}
+.flt-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;color:#c8b8a8;font-weight:700;cursor:pointer;padding:4px 6px;border-radius:6px;transition:background .15s;user-select:none;-webkit-user-select:none}
+.flt-row:hover{background:rgba(255,255,255,.06)}
+.flt-row:active{background:rgba(255,255,255,.1)}
+.flt-check{width:16px;height:16px;border-radius:4px;border:2px solid rgba(255,255,255,.25);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s}
+.flt-check.on{border-color:transparent}
+.flt-check.on::after{content:'\2713';font-size:11px;color:#fff;font-weight:900}
+.flt-lbl{flex:1;font-size:11.5px;transition:opacity .15s}
+.flt-row.off .flt-lbl{opacity:.4;text-decoration:line-through}
+.flt-cnt{font-size:10px;color:#6a5a4a;font-weight:800}
+.flt-actions{display:flex;gap:6px;margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,.06)}
+.flt-act{flex:1;padding:5px 8px;border-radius:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:#a09080;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;text-align:center;transition:background .15s}
+.flt-act:hover{background:rgba(255,255,255,.12);color:#d0c0a0}
+.m-dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.45);box-shadow:0 0 6px var(--mc,#888),0 0 0 2px rgba(255,255,255,.05);transition:transform .15s,box-shadow .15s;cursor:pointer}
+.m-dot.dim{opacity:.3;box-shadow:none}
+.m-dot:hover,.m-dot.hi{transform:scale(1.7)!important;box-shadow:0 0 14px var(--mc,#888),0 0 0 3px rgba(255,255,255,.25)}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  #story{width:100%;bottom:110px;bottom:calc(110px + env(safe-area-inset-bottom,0px));border-right:none}
+  .s-name{font-size:19px}
+  #header h1{font-size:16px}
+  #tl{height:100px;padding:6px 12px 8px;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+  #yr-lbl{font-size:20px}
+  .ep-seg{font-size:8px}
+  #filter-panel{right:8px;bottom:110px;left:8px;min-width:0;font-size:10px}
+  .intro-stats{gap:16px}
+  .intro-stat b{font-size:22px}
+  #intro h1{font-size:clamp(20px,5vw,32px)}
+}
+@media(max-width:480px){
+  #story{bottom:100px;bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+  #tl{height:90px;padding:4px 8px 6px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}
+  .ep-seg{font-size:7px;padding:0 2px}
+  #yr-hint{display:none}
+  #header{padding:8px 12px}
+  #filter-panel{bottom:100px}
+}
+</style>
+</head>
+<body>
+<div id="intro">
+  <div class="star-bg" id="stars"></div>
+  <h1>La Machine a Remonter le Temps<br>Famille Tourdot &amp; Cherrier</h1>
+  <p>Explorez plus de 380 ans d'histoire familiale a travers l'Europe. De l'Age d'Or hollandais aux montagnes basques, de la Lorraine des vignerons a la Dordogne des cultivateurs — chaque ancetre s'inscrit dans le grand recit de l'Histoire.</p>
+  <button id="intro-btn">Explorer la genealogie</button>
+  <div class="intro-stats">
+    <div class="intro-stat"><b id="stat-anc">45</b><span>Ancetres</span></div>
+    <div class="intro-stat"><b>385</b><span>Annees</span></div>
+    <div class="intro-stat"><b>8</b><span>Pays / Regions</span></div>
+  </div>
+</div>
+
+<div id="map"></div>
+<div id="header">
+  <h1>Voyage dans le Temps</h1>
+  <p id="hdr-sub">Genealogie Tourdot-Cherrier</p>
+  <button id="filter-btn" onclick="toggleFilter()">Filtres</button>
+</div>
+<div id="story"><button id="story-close" onclick="closeStory()">&#10005;</button><div id="story-body"></div></div>
+<div id="filter-panel">
+  <h3>Filtrer par branche</h3>
+  <div id="filter-rows"></div>
+  <div class="flt-actions">
+    <div class="flt-act" onclick="filterAll(true)">Tout afficher</div>
+    <div class="flt-act" onclick="filterAll(false)">Tout masquer</div>
+  </div>
+</div>
+<div id="tl">
+  <div id="epoch-bar"></div>
+  <div id="dot-row"></div>
+  <div id="yr-row">
+    <span id="yr-lbl">1640</span>
+    <input type="range" id="yr-sl" min="1640" max="2025" value="1640" step="5">
+    <span id="yr-hint">Glissez pour voyager dans le temps</span>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+function wm(file,w){return`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=${w||600}`}
+function yt(q){return`https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`}
+
+const EPOCHS=[
+  {name:"Ancien Regime",s:1640,e:1789,c:"#3d1a6e"},
+  {name:"Revolution & Empire",s:1789,e:1815,c:"#8a1a1a"},
+  {name:"XIXe siecle",s:1815,e:1914,c:"#7a4e0a"},
+  {name:"Guerres mondiales",s:1914,e:1945,c:"#153660"},
+  {name:"Epoque contemporaine",s:1945,e:2025,c:"#0f4530"},
+];
+const SPAN=2025-1640;
+
+const DATA=[
+// ═══════════════════════════════════════
+//  VAN DIJK — PAYS-BAS
+// ═══════════════════════════════════════
+{
+  id:"vd0",name:"Baastian Goosens VAN DIJK",year:1640,lat:52.091326,lng:5.123166,
+  place:"Utrecht, Provinces-Unies",color:"#2c5f8a",lineage:"Van Dijk",
+  relation:"Ancetre a la 11e generation (branche maternelle)",
+  img:wm("The_Night_Watch_-_HD.jpg"),
+  imgCaption:"La Ronde de Nuit, Rembrandt, 1642 — peinte a Amsterdam, a 65 km d'Utrecht",
+  epoque:"En 1640, les Provinces-Unies sont la premiere puissance commerciale mondiale. C'est l'apogee de l'Age d'Or neerlandais. Les marchands hollandais dominent le commerce mondial depuis la VOC (Compagnie des Indes orientales). Utrecht est alors un centre universitaire et religieux majeur.",
+  celeb:{name:"Rembrandt van Rijn",av:"RR",bg:"#5a3080",text:"Le plus grand maitre de la peinture hollandaise vit et peint a Amsterdam, a 65 km d'Utrecht. Sa 'Ronde de Nuit' (1642) incarne la puissance de la bourgeoisie neerlandaise. Il revolutionne le clair-obscur et l'art du portrait."},
+  funfact:"En 1637, trois ans avant la naissance de Baastian, eclate la 'tulipomanie' : un seul bulbe de tulipe pouvait valoir le prix d'une maison de canal a Amsterdam. Premiere bulle speculative de l'histoire.",
+  musicDesc:"Le XVIIe siecle est l'age de la musique baroque. Les compositeurs travaillent pour les cours royales et les eglises. L'orgue et le clavecin regnent.",
+  music:[
+    {label:"Sweelinck — Fantasia Chromatica",sub:"v.1600 — Organiste d'Utrecht et Amsterdam",url:yt("Sweelinck Fantasia Chromatica organ")},
+    {label:"Lully — Marche pour la ceremonie des Turcs",sub:"1670 — Cour de Louis XIV",url:yt("Lully marche ceremonie turcs baroque")},
+    {label:"Buxtehude — Passacaglia en re mineur",sub:"v.1680 — Orgue baroque nordique",url:yt("Buxtehude Passacaglia organ baroque")},
+  ]
+},
+{
+  id:"vd_wil",name:"Willem Doedinusz VAN DIJK",year:1759,lat:52.091326,lng:5.123166,
+  place:"Utrecht, Provinces-Unies",color:"#2c5f8a",lineage:"Van Dijk",
+  relation:"Ancetre a la 8e generation",
+  img:wm("Utrecht_Oudegracht_Hamburgerbrug.jpg"),
+  imgCaption:"Les canaux d'Utrecht — Willem y exerca comme pharmacien",
+  epoque:"En 1759, la Republique des Provinces-Unies decline face a la montee de la Grande-Bretagne. Utrecht reste une ville universitaire prospere. Willem sera pharmacien, une profession de prestige qui temoigne de l'essor des sciences aux Pays-Bas.",
+  celeb:{name:"Carl von Linne",av:"CL",bg:"#1a5a3a",text:"Le naturaliste suedois Linne publie son Systema Naturae et revolutionne la classification du vivant. Les pharmaciens comme Willem utilisent sa nomenclature pour identifier les plantes medicinales."},
+  funfact:"Les pharmaciens neerlandais du XVIIIe siecle etaient de veritables savants. Ils preparaient eux-memes les medicaments a partir de plantes, de mineraux et parfois de substances exotiques importees des colonies.",
+  musicDesc:"En 1759, Haendel vient de mourir et Mozart a 3 ans. La musique classique emerge du baroque, plus legere, plus melodique.",
+  music:[
+    {label:"Haydn — Symphonie n 45 'Les Adieux'",sub:"1772 — Classicisme viennois",url:yt("Haydn Symphony 45 Farewell")},
+    {label:"Mozart — Sonate pour piano K.331",sub:"1783 — Marche turque",url:yt("Mozart Sonata K331 Turkish March")},
+    {label:"C.P.E. Bach — Sonate en la mineur",sub:"1765 — Transition baroque-classique",url:yt("CPE Bach Sonata A minor Wq 49")},
+  ]
+},
+{
+  id:"vd_ant",name:"Antonius VAN DIJK",year:1818,lat:51.568586,lng:4.791953,
+  place:"Ginneken, Breda",color:"#2c5f8a",lineage:"Van Dijk",
+  relation:"Ancetre a la 6e generation",
+  img:wm("Grote_Kerk_Breda.jpg"),
+  imgCaption:"La Grote Kerk de Breda, a proximite de Ginneken",
+  epoque:"En 1818, les Pays-Bas viennent d'etre reunifies sous Guillaume Ier apres la chute de Napoleon. Le Brabant-Septentrional, region catholique, est rattache au royaume protestant. Ginneken est un village paisible aux portes de Breda.",
+  celeb:{name:"Guillaume Ier des Pays-Bas",av:"GI",bg:"#1a4a6a",text:"Premier roi des Pays-Bas (1815-1840), Guillaume Ier tente de reunifier les Pays-Bas du Nord et du Sud. L'experience echouera en 1830 avec l'independance de la Belgique."},
+  funfact:"Le mariage d'Antonius avec Cornelia Baijens, fille de forgeron a Roosendaal-Nispen, illustre la societe rurale du Brabant neerlandais ou les metiers artisanaux structuraient la vie des villages.",
+  musicDesc:"En 1818, Beethoven compose sa 9e symphonie. Le romantisme musical s'installe en Europe.",
+  music:[
+    {label:"Beethoven — Symphonie n 9 'Ode a la Joie'",sub:"1824 — L'hymne europeen",url:yt("Beethoven Symphony 9 Ode to Joy Karajan")},
+    {label:"Schubert — Erlkonig",sub:"1815 — Le lied romantique",url:yt("Schubert Erlkoenig Fischer-Dieskau")},
+    {label:"Paganini — Caprice n 24",sub:"1817 — Le virtuose diabolique",url:yt("Paganini Caprice 24 violin")},
+  ]
+},
+{
+  id:"vd1",name:"Gerardus Cornelis VAN DIJK",year:1854,lat:51.568586,lng:4.791953,
+  place:"Ginneken, Breda",color:"#2c5f8a",lineage:"Van Dijk",
+  relation:"Ancetre a la 5e generation",
+  img:wm("Vincent_van_Gogh_-_Self-Portrait_-_Google_Art_Project.jpg"),
+  imgCaption:"Vincent Van Gogh — ne en 1853 a Zundert, a 20 km de Breda",
+  epoque:"En 1854, les Pays-Bas sont un royaume stable sous Guillaume III. La revolution industrielle transforme lentement le pays. Vincent Van Gogh nait un an plus tot a Zundert, a seulement 20 km de Ginneken.",
+  celeb:{name:"Vincent Van Gogh",av:"VG",bg:"#4a3080",text:"Ne en 1853 a Zundert, quasi-voisin de Gerardus, Van Gogh deviendra l'un des peintres les plus influents de l'histoire. Il ne vendra qu'un seul tableau de son vivant. Ses oeuvres valent aujourd'hui des centaines de millions."},
+  funfact:"Le Brabant-Septentrional, region natale des Van Dijk, est aussi le berceau de Philips (Eindhoven, 1891) et de nombreuses brasseries. La biere trappiste est une specialite de la region.",
+  musicDesc:"En 1854, le romantisme musical bat son plein. Brahms a 21 ans, Wagner compose ses operas epiques, Liszt eblouit les foules au piano.",
+  music:[
+    {label:"Brahms — Berceuse (Wiegenlied)",sub:"1868 — La berceuse la plus connue au monde",url:yt("Brahms Lullaby Wiegenlied")},
+    {label:"Wagner — La Chevauchee des Walkyries",sub:"1856 — Puissance orchestrale inegalee",url:yt("Wagner Ride of the Valkyries")},
+    {label:"Liszt — La Campanella",sub:"1851 — Virtuosite pianistique absolue",url:yt("Liszt La Campanella piano")},
+  ]
+},
+{
+  id:"vd2",name:"Cornelis Jacobus VAN DIJK",year:1889,lat:51.568586,lng:4.791953,
+  place:"Ginneken, Breda",color:"#2c5f8a",lineage:"Van Dijk",
+  relation:"Arriere-arriere-grand-pere (branche maternelle)",
+  img:wm("Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg"),
+  imgCaption:"La Nuit Etoilee — Van Gogh, 1889, l'annee de naissance de Cornelis",
+  epoque:"En 1889, Van Gogh peint 'La Nuit Etoilee' et 'Les Tournesols'. A Paris, la Tour Eiffel est inauguree pour l'Exposition Universelle. Cornelis deviendra chef peintre en batiment et emigrera a Paris, dans le 17e arrondissement.",
+  celeb:{name:"Vincent Van Gogh",av:"VG",bg:"#4a3080",text:"Van Gogh peint ses chefs-d'oeuvre en 1889. Ne a Zundert, presque voisin de la famille Van Dijk, il mourra en 1890 sans connaitre la gloire. 'La Nuit Etoilee' est peinte l'annee meme de la naissance de Cornelis."},
+  funfact:"Cornelis quittera les Pays-Bas pour s'installer a Paris comme chef peintre en batiment. Ce parcours migratoire des Pays-Bas vers la France est representatif des mouvements de population au tournant du siecle.",
+  musicDesc:"1889 : l'Exposition Universelle de Paris presente des musiques du monde entier. Debussy y decouvre le gamelan javanais, ce qui transformera sa musique.",
+  music:[
+    {label:"Debussy — La Mer",sub:"1905 — Impressionnisme musical",url:yt("Debussy La Mer orchestral")},
+    {label:"Ravel — Bolero",sub:"1928 — Le crescendo le plus celebre du monde",url:yt("Ravel Bolero orchestra")},
+    {label:"Mahler — Symphonie n 1 'Titan'",sub:"1888 — Le romantisme tardif",url:yt("Mahler Symphony 1 Titan")},
+  ]
+},
+{
+  id:"vd_gab",name:"Gabrielle Alice OLIVEAU",year:1890,lat:45.992789,lng:-0.087795,
+  place:"Couture-d'Argenson, Deux-Sevres",color:"#2c5f8a",lineage:"Van Dijk",
+  relation:"Arriere-arriere-grand-mere (branche maternelle)",
+  img:wm("Marais_Poitevin_Green_Venice.jpg"),
+  imgCaption:"Le Marais Poitevin, 'Venise Verte', pres de Couture-d'Argenson",
+  epoque:"En 1890, Couture-d'Argenson est un petit village rural des Deux-Sevres, aux portes du Marais Poitevin. La IIIe Republique consolide l'ecole laique. Gabrielle deviendra fourreuse et epousera Cornelis Van Dijk a Paris en 1919.",
+  celeb:{name:"Ernest Perochon",av:"EP",bg:"#2a6a3a",text:"Ne en 1885 a Courlay (Deux-Sevres), Perochon recevra le prix Goncourt en 1920 pour 'Nene', roman qui depeint la vie rurale poitevine telle que Gabrielle l'a connue dans son enfance."},
+  funfact:"Le Marais Poitevin, surnomme 'Venise Verte', est la deuxieme plus grande zone humide de France. Les habitants se deplacaient en barque plate (la 'plate') entre les canaux bordes de frenes tetards.",
+  musicDesc:"La France rurale de 1890 vibre au son des bals musette et des chansons populaires, tandis que Paris decouvre le cabaret et l'impressionnisme musical.",
+  music:[
+    {label:"Satie — Gymnopedie n 1",sub:"1888 — Melancolie moderne",url:yt("Satie Gymnopedie No 1 piano")},
+    {label:"Faure — Requiem",sub:"1888 — Serenite spirituelle",url:yt("Faure Requiem In Paradisum")},
+    {label:"Chansons du Poitou — Tradition orale",sub:"XIXe siecle — Musique populaire poitevine",url:yt("chansons traditionnelles Poitou folk")},
+  ]
+},
+{
+  id:"vd_mon",name:"Monique Angeline VAN DIJK",year:1923,lat:48.929573,lng:2.048399,
+  place:"Poissy, Yvelines",color:"#2c5f8a",lineage:"Van Dijk",
+  relation:"Arriere-grand-mere (branche maternelle)",
+  img:wm("Poissy_Collégiale_Notre-Dame.jpg"),
+  imgCaption:"La Collegiale Notre-Dame de Poissy, ou Saint Louis fut baptise en 1214",
+  epoque:"En 1923, Poissy est une ville industrielle en plein essor aux portes de Paris. L'usine automobile Matford (future Simca, puis Talbot-PSA) s'y installe. Monique, fille d'un immigre neerlandais et d'une Poitevine, incarne le brassage de la France du XXe siecle.",
+  celeb:{name:"Andre Citroen",av:"AC",bg:"#1a5a6a",text:"L'industrie automobile francaise est en plein essor. Citroen lance la Traction Avant en 1934, revolution technique majeure. Poissy deviendra l'un des grands centres de l'automobile francaise."},
+  funfact:"Poissy est la ville natale de Saint Louis (Louis IX), roi de France baptise dans la collegiale en 1214. Il signait ses actes 'Louis de Poissy' plutot que 'Louis de France', tant il etait fier de son bapteme.",
+  musicDesc:"Les Annees folles : jazz americain, chansons realistes, premiers enregistrements phonographiques. Paris est la capitale mondiale du divertissement.",
+  music:[
+    {label:"Josephine Baker — J'ai deux amours",sub:"1930 — La star des Annees folles",url:yt("Josephine Baker J'ai deux amours 1930")},
+    {label:"Maurice Chevalier — Valentine",sub:"1925 — Le charme parisien",url:yt("Maurice Chevalier Valentine 1925")},
+    {label:"George Gershwin — Rhapsody in Blue",sub:"1924 — Jazz et classique fusionnes",url:yt("Gershwin Rhapsody in Blue original")},
+  ]
+},
+// ═══════════════════════════════════════
+//  BASSAISTEGUY — PAYS BASQUE
+// ═══════════════════════════════════════
+{
+  id:"ba0",name:"Gratian BASSAISTEGUY",year:1691,lat:43.144613,lng:-1.160967,
+  place:"Ahaxe-Alciette-Bascassan, Pays Basque",color:"#7b3fa0",lineage:"Bassaisteguy",
+  relation:"Ancetre a la 10e generation",
+  img:wm("Château_de_Versailles,_le_soir.jpg"),
+  imgCaption:"Le chateau de Versailles — construit par Louis XIV, qui regnait en 1691",
+  epoque:"En 1691, Louis XIV regne depuis 48 ans et Versailles rayonne sur l'Europe. Mais dans les montagnes basques, la vie suit son propre rythme. Les Basques sont de grands marins et baleiniers — ils pechent jusqu'a Terre-Neuve depuis le XVe siecle.",
+  celeb:{name:"Louis XIV",av:"LX",bg:"#8a6000",text:"Le 'Roi Soleil' gouverne depuis Versailles, le plus grand palais du monde. Mais dans les Pyrenees basques, les communautes villageoises conservent leurs coutumes ancestrales et parlent l'Euskara."},
+  funfact:"L'Euskara (langue basque) est la plus ancienne langue vivante d'Europe et n'a aucune parente connue avec aucune autre langue au monde. Son origine reste un mystere linguistique complet.",
+  musicDesc:"La musique de cour de Louis XIV domine la France, mais au Pays Basque, on joue du txistu (flute a trois trous) et on chante en basque.",
+  music:[
+    {label:"Lully — Te Deum",sub:"1677 — Compose pour les victoires de Louis XIV",url:yt("Lully Te Deum versailles baroque")},
+    {label:"Chants basques traditionnels — Arin-Arin",sub:"XVIIe siecle — Musique du Pays Basque",url:yt("musique traditionnelle basque txistu Arin-Arin")},
+    {label:"Charpentier — Te Deum",sub:"1692 — Le celebre prelude de l'Eurovision",url:yt("Charpentier Te Deum prelude baroque")},
+  ]
+},
+{
+  id:"ba_gui",name:"Guillaume BASSAISTEGUY",year:1724,lat:43.144613,lng:-1.160967,
+  place:"Ahaxe-Alciette-Bascassan",color:"#7b3fa0",lineage:"Bassaisteguy",
+  relation:"Ancetre a la 9e generation",
+  img:wm("Pays_basque_mountain.jpg"),
+  imgCaption:"Montagnes du Pays Basque interieur, pres d'Ahaxe",
+  epoque:"En 1724, la France est sous la Regence puis le regne de Louis XV. Le Pays Basque interieur (la Basse-Navarre) conserve ses fors (privileges) et ses assemblees locales. Guillaume est cultivateur a Ahaxe, au coeur de la vallee de Cize.",
+  celeb:{name:"Montesquieu",av:"MQ",bg:"#4a3060",text:"Charles de Montesquieu, ne a Bordeaux (1689-1755), publie 'Les Lettres persanes' en 1721. Son oeuvre majeure, 'L'Esprit des lois' (1748), posera les bases de la separation des pouvoirs."},
+  funfact:"La vallee de Cize, ou se situe Ahaxe, est l'une des voies historiques du chemin de Saint-Jacques-de-Compostelle. Les pelerins traversaient les Pyrenees par le col de Roncevaux, a quelques kilometres de la.",
+  musicDesc:"Sous Louis XV, la musique francaise evolue vers le style galant. Rameau domine l'opera francais.",
+  music:[
+    {label:"Rameau — Les Indes galantes",sub:"1735 — Opera-ballet versaillais",url:yt("Rameau Les Indes Galantes opera ballet")},
+    {label:"Vivaldi — Les Quatre Saisons",sub:"1725 — L'oeuvre baroque la plus jouee",url:yt("Vivaldi Four Seasons Spring")},
+    {label:"Couperin — Les Barricades mysterieuses",sub:"1717 — Clavecin francais",url:yt("Couperin Barricades Mysterieuses harpsichord")},
+  ]
+},
+{
+  id:"ba1",name:"Dominique BASSAISTEGUY",year:1786,lat:43.144613,lng:-1.160967,
+  place:"Ahaxe-Alciette-Bascassan",color:"#7b3fa0",lineage:"Bassaisteguy",
+  relation:"Ancetre a la 8e generation",
+  img:wm("Pelota_en_chistera_y_jai_alai.jpg"),
+  imgCaption:"Pelote basque — le sport le plus rapide du monde, tradition ancestrale",
+  epoque:"En 1786, la France est au bord de la faillite. Dans trois ans, la Revolution va tout bouleverser. Les Pyrenees forment la frontiere naturelle entre France et Espagne. Dominique, laboureur, verra la Revolution abolir les privileges mais aussi les fors basques.",
+  celeb:{name:"Wolfgang Amadeus Mozart",av:"WM",bg:"#4a1a7a",text:"Mozart compose ses chefs-d'oeuvre : 'Les Noces de Figaro' (1786, l'annee meme de la naissance de Dominique), 'Don Giovanni' (1787), 'La Flute enchantee' (1791). Il mourra a 35 ans, laissant un heritage musical inegalable."},
+  funfact:"La pelote basque est le sport de balle le plus rapide au monde : la pelota peut atteindre 300 km/h. Le fronton, present dans chaque village basque, est le coeur de la vie sociale, comme la place du marche.",
+  musicDesc:"En 1786, Mozart ecrit 'Les Noces de Figaro' — une revolution musicale. Au Pays Basque, la trikitixa (accordeon basque) et le tambourin rythment les fetes.",
+  music:[
+    {label:"Mozart — Les Noces de Figaro, ouverture",sub:"1786 — L'annee de naissance de Dominique",url:yt("Mozart Noces de Figaro ouverture")},
+    {label:"Trikitixa — Musique traditionnelle basque",sub:"XVIIIe siecle — L'accordeon du Pays Basque",url:yt("trikitixa musique traditionnelle basque")},
+    {label:"Beethoven — Sonate 'Au Clair de Lune'",sub:"1801 — Le romantisme naissant",url:yt("Beethoven Moonlight Sonata")},
+  ]
+},
+{
+  id:"ba_jn",name:"Jean BASSAISTEGUY",year:1818,lat:43.144613,lng:-1.160967,
+  place:"Ahaxe-Alciette-Bascassan",color:"#7b3fa0",lineage:"Bassaisteguy",
+  relation:"Ancetre a la 7e generation",
+  img:wm("Col_de_Roncevaux.jpg"),
+  imgCaption:"Le col de Roncevaux — passage mythique des Pyrenees, a quelques km d'Ahaxe",
+  epoque:"En 1818, la France est sous la Restauration des Bourbons, apres la chute de Napoleon. Jean est laboureur a Ahaxe, comme ses ancetres avant lui. Le Pays Basque francais s'integre lentement dans le systeme administratif national tout en preservant ses traditions.",
+  celeb:{name:"Augustin Chaho",av:"AC",bg:"#5a2a7a",text:"Ne a Tardets en 1811, Augustin Chaho est l'un des premiers intellectuels basques. Ecrivain, journaliste et mythologue, il contribue au reveil de la conscience basque et a la preservation de l'Euskara."},
+  funfact:"Le patronyme Bassaisteguy se retrouve aussi sous les formes Bassagaisteguy et Bassagaitx dans les registres. Les noms basques designent souvent une maison ('etxe') plutot qu'un individu — la maison Bassaisteguy perdure a travers les generations.",
+  musicDesc:"Sous la Restauration, le romantisme musical s'installe en France. Berlioz compose sa Symphonie fantastique (1830).",
+  music:[
+    {label:"Berlioz — Symphonie fantastique",sub:"1830 — Le romantisme francais eclate",url:yt("Berlioz Symphonie Fantastique")},
+    {label:"Schubert — Serenade",sub:"1828 — Lyrisme viennois",url:yt("Schubert Serenade Standchen")},
+    {label:"Rossini — Le Barbier de Seville, ouverture",sub:"1816 — Opera-comique",url:yt("Rossini Barber of Seville overture")},
+  ]
+},
+{
+  id:"ba_pie",name:"Pierre BASSAISTEGUY",year:1846,lat:43.144613,lng:-1.160967,
+  place:"Ahaxe-Alciette-Bascassan",color:"#7b3fa0",lineage:"Bassaisteguy",
+  relation:"Ancetre a la 6e generation",
+  img:wm("Saint-Jean-Pied-de-Port_001.jpg"),
+  imgCaption:"Saint-Jean-Pied-de-Port, la 'capitale' de la Basse-Navarre voisine",
+  epoque:"En 1846, la France est sous la Monarchie de Juillet. Pierre sera laboureur ET maire d'Ahaxe-Alciette-Bascassan — un notable local qui combine travail de la terre et responsabilite politique. Il mourra en aout 1934.",
+  celeb:{name:"Napoleon III",av:"NI",bg:"#4a2a5a",text:"Louis-Napoleon Bonaparte prend le pouvoir en 1848 et devient empereur en 1852. Sous le Second Empire, le chemin de fer arrive au Pays Basque et Biarritz devient la station balneaire preferee de l'imperatrice Eugenie."},
+  funfact:"Pierre est a la fois laboureur et maire de sa commune. Dans le Pays Basque du XIXe siecle, les 'etxeko jaun' (maitres de maison) les plus respectes cumulent souvent les fonctions agricoles et politiques.",
+  musicDesc:"Le milieu du XIXe siecle voit l'essor de l'opera et de la musique orchestrale romantique.",
+  music:[
+    {label:"Verdi — La Traviata",sub:"1853 — L'opera romantique italien",url:yt("Verdi La Traviata Libiamo")},
+    {label:"Chopin — Ballade n 1",sub:"1835 — Le piano romantique polonais",url:yt("Chopin Ballade 1 Zimerman")},
+    {label:"Bizet — L'Arlesienne, Suite n 2",sub:"1872 — Melodie provencale",url:yt("Bizet Arlesienne Suite 2 Farandole")},
+  ]
+},
+{
+  id:"ba2",name:"Jean-Baptiste BASSAISTEGUY",year:1903,lat:43.144613,lng:-1.160967,
+  place:"Ahaxe-Alciette-Bascassan",color:"#7b3fa0",lineage:"Bassaisteguy",
+  relation:"Arriere-arriere-grand-pere (branche maternelle)",
+  img:wm("First_flight2.jpg"),
+  imgCaption:"Premier vol des freres Wright, 17 decembre 1903 — l'annee de naissance de Jean-Baptiste",
+  epoque:"En 1903, les freres Wright realisent le premier vol motorise. L'automobile remplace les chevaux. Jean-Baptiste quittera le Pays Basque pour devenir inspecteur d'assurance et comptable — un parcours social ascendant typique du debut du XXe siecle.",
+  celeb:{name:"Les freres Wright",av:"WB",bg:"#1a4a7a",text:"Orville et Wilbur Wright volent pour la premiere fois sur 36 metres en 12 secondes a Kitty Hawk, le 17 decembre 1903. Un siecle plus tard, les Airbus A380 transportent 900 passagers."},
+  funfact:"Le chocolat de Bayonne est une tradition seculaire du Pays Basque. Ce sont des chocolatiers juifs espagnols, fuyant l'Inquisition, qui ont introduit le cacao a Bayonne au XVIIe siecle, en faisant la capitale francaise du chocolat.",
+  musicDesc:"En 1903, le phonographe permet pour la premiere fois d'enregistrer la musique. Les chants de marins basques, jusqu'alors transmis oralement, commencent a etre preserves.",
+  music:[
+    {label:"Ravel — Rapsodie espagnole",sub:"1907 — Ravel, ne a Ciboure (Pays Basque)",url:yt("Ravel Rhapsodie espagnole 1907")},
+    {label:"Albeniz — Asturias",sub:"1892 — Guitare classique iberique",url:yt("Albeniz Asturias guitar classical")},
+    {label:"Chants basques — Arranoak",sub:"Traditionnel — Les marins baleiniers",url:yt("chants basques marins traditionnels")},
+  ]
+},
+{
+  id:"ba_gas",name:"Gaston Marie Jean BASSAISTEGUY",year:1935,lat:43.163418,lng:-1.235726,
+  place:"Saint-Jean-Pied-de-Port",color:"#7b3fa0",lineage:"Bassaisteguy",
+  relation:"Arriere-grand-pere (branche maternelle)",
+  img:wm("Saint-Jean-Pied-de-Port_Porte_Saint-Jacques.jpg"),
+  imgCaption:"La Porte Saint-Jacques a Saint-Jean-Pied-de-Port, etape du chemin de Compostelle",
+  epoque:"En 1935, la France est en crise economique. Saint-Jean-Pied-de-Port, ancienne capitale de la Basse-Navarre, vit du commerce, de l'agriculture et du passage des pelerins vers Compostelle. Gaston mourra jeune, vers 1978, a Orleans.",
+  celeb:{name:"Maurice Ravel",av:"MR",bg:"#5a2a8a",text:"Ravel (1875-1937), ne a Ciboure au Pays Basque, est l'un des plus grands compositeurs francais. Son Bolero (1928) et son Concerto en sol (1931) sont joues dans le monde entier. Il meurt deux ans apres la naissance de Gaston."},
+  funfact:"Saint-Jean-Pied-de-Port est la derniere etape avant le passage des Pyrenees sur le chemin de Saint-Jacques-de-Compostelle. Depuis le Moyen Age, des millions de pelerins y ont fait halte avant de franchir le col de Roncevaux.",
+  musicDesc:"Les annees 1930 voient l'essor du jazz en France et la chanson francaise realiste. Au Pays Basque, les choeurs d'hommes perpetuent la tradition polyphonique.",
+  music:[
+    {label:"Ravel — Concerto pour piano en sol",sub:"1931 — Jazz et classique, par le fils du Pays Basque",url:yt("Ravel Piano Concerto G major")},
+    {label:"Charles Trenet — Y'a d'la joie",sub:"1937 — Le 'fou chantant'",url:yt("Charles Trenet Y'a d'la joie")},
+    {label:"Choeurs basques — Hegoak",sub:"Traditionnel — L'hymne basque contemporain",url:yt("Hegoak chant basque choeur")},
+  ]
+},
+// ═══════════════════════════════════════
+//  LOUIS — LORRAINE
+// ═══════════════════════════════════════
+{
+  id:"lo_nic",name:"Nicolas LOUIS",year:1667,lat:48.44,lng:6.35,
+  place:"Gest, Lorraine (Vosges)",color:"#1a7561",lineage:"Louis",
+  relation:"Ancetre a la 10e generation",
+  img:wm("Lorraine_duche.jpg"),
+  imgCaption:"Le duche de Lorraine au XVIIe siecle — territoire independant entre France et Empire",
+  epoque:"En 1667, la Lorraine est encore un duche independant, coince entre le royaume de France et le Saint-Empire. La guerre de Trente Ans (1618-1648) a devaste la region. Nicolas vit dans une Lorraine rurale qui se reconstruit lentement.",
+  celeb:{name:"Jacques Callot",av:"JC",bg:"#2a5a4a",text:"Le graveur lorrain Jacques Callot (1592-1635), ne a Nancy, a immortalise les horreurs de la guerre de Trente Ans dans 'Les Grandes Miseres de la Guerre'. Son oeuvre temoigne du desastre qui a frappe la Lorraine."},
+  funfact:"La guerre de Trente Ans a fait perdre a la Lorraine plus de la moitie de sa population. Les villages etaient deserts, les champs en friche. La reconstruction prendra des decennies.",
+  musicDesc:"En 1667, le baroque triomphe en Europe. Lully domine la musique francaise, tandis que Corelli developpe le concerto en Italie.",
+  music:[
+    {label:"Lully — Armide, Passacaille",sub:"1686 — L'opera francais a son apogee",url:yt("Lully Armide Passacaille")},
+    {label:"Corelli — Concerto grosso op.6 n 8 'Noel'",sub:"1714 — Baroque italien",url:yt("Corelli Christmas Concerto op6 no8")},
+    {label:"Purcell — Music for the Funeral of Queen Mary",sub:"1695 — Baroque anglais",url:yt("Purcell Funeral Queen Mary")},
+  ]
+},
+{
+  id:"lo0",name:"Francois LOUIS",year:1747,lat:48.457130,lng:6.348585,
+  place:"Villacourt, Vosges",color:"#1a7561",lineage:"Louis",
+  relation:"Ancetre a la 8e generation",
+  img:wm("Voltaire_by_Jean-Antoine_Houdon_(1778).jpg"),
+  imgCaption:"Voltaire (1694-1778) — le philosophe des Lumieres",
+  epoque:"En 1747, la France est en plein Siecle des Lumieres. Voltaire, Rousseau, Diderot remettent en question l'ordre etabli. La Lorraine est rattachee a la France depuis 1766. Francois est vigneron a Villacourt — le vin lorrain etait alors repandu.",
+  celeb:{name:"Voltaire",av:"VV",bg:"#1a4a7a",text:"Le philosophe Voltaire ecrit depuis son chateau et critique l'autorite. Son 'Candide' (1759) marquera la pensee europeenne. Le duche de Lorraine, sous Stanislas Leszczynski, connait une periode de prosperite culturelle."},
+  funfact:"Francois etait vigneron a Villacourt. La viticulture lorraine, aujourd'hui confidentielle, etait autrefois tres repandue. Les vignobles des Cotes de Toul et de la Moselle produisent encore du 'gris de Toul', un rose typique.",
+  musicDesc:"En 1747, la musique classique emerge du baroque. Rameau domine l'opera francais, Haendel triomphe a Londres.",
+  music:[
+    {label:"Rameau — Les Indes galantes, 'Les Sauvages'",sub:"1735 — Opera-ballet",url:yt("Rameau Indes galantes Les Sauvages")},
+    {label:"Handel — Musique pour les feux d'artifice royaux",sub:"1749 — Faste monarchique",url:yt("Handel fireworks music royal 1749")},
+    {label:"Bach — Variations Goldberg",sub:"1741 — Le sommet du baroque",url:yt("Bach Goldberg Variations Glenn Gould")},
+  ]
+},
+{
+  id:"lo1",name:"Jeanne Marie SYLVESTRE",year:1778,lat:48.371962,lng:6.292605,
+  place:"Charmes, Vosges",color:"#1a7561",lineage:"Louis",
+  relation:"Ancetre a la 7e generation",
+  img:wm("Marie-Antoinette_Adult.jpg"),
+  imgCaption:"Marie-Antoinette — reine de France a la naissance de Jeanne Marie",
+  epoque:"En 1778, la France soutient les insurges americains contre l'Angleterre. Dans onze ans, la Revolution francaise bouleversera l'ordre social. Son pere, Jean Joseph Sylvestre, est berger pres de Charmes.",
+  celeb:{name:"Marie-Antoinette",av:"MA",bg:"#7a1a5a",text:"Marie-Antoinette a 22 ans et regne a Versailles avec Louis XVI. Adoree puis haie, elle sera guillotinee en 1793. Le destin tragique de la reine incarne les bouleversements de l'epoque."},
+  funfact:"Charmes, sur la Moselle, est une etape historique entre Nancy et Epinal. La ville doit son nom au latin 'Carinum' (charme, arbre). Le munster des Vosges, fromage a pate molle et odeur puissante, est produit a proximite.",
+  musicDesc:"En 1778, Mozart visite Paris. La musique classique atteint son apogee avec Haydn et Mozart.",
+  music:[
+    {label:"Mozart — Petite musique de nuit",sub:"1787 — Classicisme viennois",url:yt("Mozart Eine kleine Nachtmusik")},
+    {label:"Gluck — Orphee et Eurydice",sub:"1762 — L'opera prefere de Marie-Antoinette",url:yt("Gluck Orphee Eurydice J'ai perdu mon Eurydice")},
+    {label:"Haydn — Quatuor 'L'Alouette'",sub:"1790 — Musique de chambre viennoise",url:yt("Haydn string quartet lark")},
+  ]
+},
+{
+  id:"lo2",name:"Leopold LOUIS",year:1809,lat:48.431307,lng:6.341233,
+  place:"Saint-Germain, Vosges",color:"#1a7561",lineage:"Louis",
+  relation:"Ancetre a la 6e generation",
+  img:wm("Jacques-Louis_David_-_The_Coronation_of_Napoleon.jpg"),
+  imgCaption:"Sacre de Napoleon par David (1807) — Napoleon est au sommet de sa gloire",
+  epoque:"En 1809, Napoleon est au faite de sa puissance. La bataille de Wagram consacre sa domination sur l'Autriche. Leopold, menuisier a Saint-Germain, grandit dans une France imperiale qui transforme profondement les institutions et l'administration du pays.",
+  celeb:{name:"Napoleon Bonaparte",av:"NB",bg:"#c02030",text:"Napoleon a cree le Code civil (encore en vigueur), les lycees, la Legion d'honneur, la Banque de France. Mais ses defaites arrivent : Russie 1812, Leipzig 1813, Waterloo 1815. Sa reforme administrative perdure encore aujourd'hui."},
+  funfact:"Napoleon a cree le systeme metrique, le Code civil, les prefets, le baccalaureat, la Banque de France et la Cour des comptes — une revolution administrative dont la France herite encore directement.",
+  musicDesc:"En 1809, Beethoven compose ses oeuvres les plus heroiques. Napoleon etait amateur de musique — Beethoven lui avait d'abord dedie sa 3e symphonie avant de dechirer la dedicace.",
+  music:[
+    {label:"Beethoven — Symphonie n 5",sub:"1808 — 'Ta ta ta TAA', la plus celebre ouverture",url:yt("Beethoven Symphony 5 Karajan")},
+    {label:"Beethoven — Symphonie n 3 'Heroique'",sub:"1804 — D'abord dediee a Napoleon",url:yt("Beethoven Symphony 3 Eroica")},
+    {label:"Beethoven — Concerto pour piano n 5 'L'Empereur'",sub:"1809 — L'annee de naissance de Leopold",url:yt("Beethoven Emperor Concerto piano 5")},
+  ]
+},
+{
+  id:"lo3",name:"Albert Jules LOUIS",year:1882,lat:48.876708,lng:2.335778,
+  place:"Paris, rue Saint-Lazare",color:"#1a7561",lineage:"Louis",
+  relation:"Arriere-arriere-grand-pere (branche maternelle)",
+  img:wm("Eiffel_Tower_from_the_Champ_de_Mars,_Paris_May_2015.jpg"),
+  imgCaption:"La Tour Eiffel — Albert a 7 ans quand elle est construite en 1889",
+  epoque:"En 1882, Paris entre dans la modernite : l'ecole devient obligatoire et gratuite (lois Jules Ferry). La Tour Eiffel sera construite dans sept ans. L'electricite illumine les premieres rues. Albert deviendra contremaitre d'acierie a Longlaville, pres de la frontiere luxembourgeoise.",
+  celeb:{name:"Louis Pasteur",av:"LP",bg:"#0a6a4a",text:"Pasteur decouvre les microbes et travaille sur le vaccin contre la rage (1885). Ses travaux revolutionnent la medecine et sauvent des millions de vies. L'Institut Pasteur est fonde en 1888."},
+  funfact:"Albert Jules est ne rue Saint-Lazare a Paris, mais il deviendra contremaitre a l'acierie de Longlaville (Meurthe-et-Moselle) — un parcours qui illustre la migration interieure vers les bassins siderurgiques du Nord-Est au tournant du XXe siecle.",
+  musicDesc:"En 1882, Paris est la capitale culturelle mondiale. Debussy a 20 ans, les cafes-concerts de Pigalle animent les nuits parisiennes. La Belle Epoque commence.",
+  music:[
+    {label:"Debussy — Clair de Lune",sub:"1905 — Impressionnisme musical",url:yt("Debussy Clair de Lune piano")},
+    {label:"Faure — Requiem, In Paradisum",sub:"1888 — Spiritualite francaise",url:yt("Faure Requiem In Paradisum")},
+    {label:"Satie — Gymnopedies",sub:"1888 — Modernite melancolique",url:yt("Satie Gymnopedie No 1 piano")},
+  ]
+},
+{
+  id:"lo4",name:"Marc Albert LOUIS",year:1915,lat:49.533938,lng:5.800849,
+  place:"Longlaville, Meurthe-et-Moselle",color:"#1a7561",lineage:"Louis",
+  relation:"Arriere-grand-pere (branche maternelle)",
+  img:wm("Cheshire_Regiment_trench_Somme_1916.jpg"),
+  imgCaption:"Tranchees de la Premiere Guerre mondiale, Somme, 1916",
+  epoque:"En 1915, la Grande Guerre fait rage. Longlaville, a quelques kilometres du front, est au coeur du bassin siderurgique lorrain. L'acier produit ici alimente l'effort de guerre. Marc Albert grandira dans une France meurtrie mais determinee a reconstruire.",
+  celeb:{name:"Marechal Joffre",av:"GJ",bg:"#1a3a6a",text:"Le marechal Joffre a sauve Paris lors de la bataille de la Marne (1914). La guerre de position s'installe dans les tranchees. Longlaville, ville siderurgique strategique, vit au rythme du conflit."},
+  funfact:"Longlaville et Longwy sont celebres pour la faience emaillee polychrome — le 'Longwy'. Ces ceramiques aux emaux cloisonnes, inspirees de l'art japonais, sont encore fabriquees aujourd'hui et sont tres recherchees par les collectionneurs.",
+  musicDesc:"En 1915, les soldats chantent pour garder le moral dans les tranchees. 'La Madelon' est le tube de la Grande Guerre.",
+  music:[
+    {label:"La Madelon — Chanson des poilus",sub:"1914 — L'hymne des tranchees",url:yt("La Madelon chanson poilus Premiere Guerre Mondiale")},
+    {label:"Debussy — Children's Corner",sub:"1908 — Tendresse en temps de guerre",url:yt("Debussy Children's Corner piano")},
+    {label:"Faure — Elegie",sub:"1883 — Melancolie d'une epoque meurtrie",url:yt("Faure Elegie violoncelle")},
+  ]
+},
+{
+  id:"lo_bri",name:"Brigitte LOUIS",year:1949,lat:49.546455,lng:5.787035,
+  place:"Mont-Saint-Martin, Meurthe-et-Moselle",color:"#1a7561",lineage:"Louis",
+  relation:"Grand-mere paternelle",
+  img:wm("Plan_Schuman.jpg"),
+  imgCaption:"Robert Schuman, pere de l'Europe — ne a Luxembourg, a 30 km de Mont-Saint-Martin",
+  epoque:"En 1949, la France se reconstruit apres la guerre. Mont-Saint-Martin, dans le bassin siderurgique de Longwy, vit de l'acier. Robert Schuman, depute de la Moselle, prepare le plan qui fondera la Communaute europeenne du charbon et de l'acier (1951) — l'embryon de l'Union europeenne.",
+  celeb:{name:"Robert Schuman",av:"RS",bg:"#1a4a6a",text:"Ne a Luxembourg (1886), depute de la Moselle, Robert Schuman est le 'pere de l'Europe'. Sa declaration du 9 mai 1950 lance la construction europeenne. Mont-Saint-Martin est au coeur de cette region frontiere franco-luxembourgeoise qui inspire le projet europeen."},
+  funfact:"Le bassin siderurgique de Longwy-Mont-Saint-Martin etait l'un des plus importants de France. A son apogee, les hauts-fourneaux eclairaient le ciel la nuit. La desindustrialisation des annees 1970-80 transformera profondement la region.",
+  musicDesc:"En 1949, la France decouvre le be-bop americain, Piaf triomphe et la chanson francaise entre dans son age d'or.",
+  music:[
+    {label:"Edith Piaf — Hymne a l'amour",sub:"1949 — L'annee de naissance de Brigitte",url:yt("Edith Piaf Hymne a l'amour 1949")},
+    {label:"Sidney Bechet — Petite Fleur",sub:"1952 — Le jazz en France",url:yt("Sidney Bechet Petite Fleur")},
+    {label:"Yves Montand — Les Feuilles mortes",sub:"1950 — Prevert et Kosma",url:yt("Yves Montand Les feuilles mortes")},
+  ]
+},
+// ═══════════════════════════════════════
+//  BLEYTOU / DUCHESNE — DORDOGNE / TOURAINE
+// ═══════════════════════════════════════
+{
+  id:"bl0",name:"Jacques BLEYTOU",year:1696,lat:44.725028,lng:0.409975,
+  place:"Saint-Innocence, Dordogne",color:"#c47d0a",lineage:"Bleytou",
+  relation:"Ancetre a la 9e generation",
+  img:wm("Lascaux_painting.jpg"),
+  imgCaption:"Peintures de Lascaux, Dordogne — 17 000 ans d'art sous les pieds de Jacques",
+  epoque:"En 1696, la Dordogne est une region rurale et forestiere. Les habitants cultivent la terre, elevent des cochons et cherchent des truffes dans les forets de chenes. Saint-Innocence, minuscule paroisse du Bergeracois, verra des generations de Bleytou se succeder.",
+  celeb:{name:"Jean de La Fontaine",av:"JF",bg:"#1a5a2a",text:"Le grand fabuliste vient de mourir (1695). Ses fables — 'La Cigale et la Fourmi', 'Le Corbeau et le Renard' — sont deja des classiques. En Dordogne rurale, les contes se transmettent oralement au coin du feu."},
+  funfact:"La Dordogne abrite les grottes de Lascaux — 17 000 ans de peintures prehistoriques. Elles ne seront decouvertes qu'en 1940 par quatre adolescents et leur chien Robot. Le departement compte plus de 1 500 chateaux et manoirs.",
+  musicDesc:"En 1696, la musique baroque francaise est dominee par les eleves de Lully. Dans la campagne perigourdine, on chante en occitan lors des veilleees et des fetes.",
+  music:[
+    {label:"Rameau — Pieces de clavecin",sub:"1706 — Baroque francais",url:yt("Rameau pieces clavecin baroque")},
+    {label:"Chansons populaires du Perigord",sub:"XVIIe siecle — Tradition orale occitane",url:yt("musique traditionnelle Perigord Dordogne folk occitan")},
+    {label:"Bach — Suite pour violoncelle n 1",sub:"v.1720 — Le baroque instrumental",url:yt("Bach cello suite 1 prelude Yo-Yo Ma")},
+  ]
+},
+{
+  id:"bl1",name:"Jean BLEYTOU",year:1767,lat:44.725028,lng:0.409975,
+  place:"Saint-Innocence, Dordogne",color:"#c47d0a",lineage:"Bleytou",
+  relation:"Ancetre a la 8e generation",
+  img:wm("Prise_de_la_Bastille.jpg"),
+  imgCaption:"Prise de la Bastille, 14 juillet 1789 — Jean a 22 ans",
+  epoque:"En 1767, la France est sous Louis XV. Jean verra la Revolution francaise eclater alors qu'il a 22 ans. Il epouse Marie Borderie de Ribagnac. Leur fils Jean (1804) sera tisserand — la Dordogne est alors un pays de polyculture et d'artisanat textile.",
+  celeb:{name:"Napoleon Bonaparte",av:"NB",bg:"#c02030",text:"Napoleon naitra en 1769, deux ans apres Jean. Il deviendra le plus grand conquerant d'Europe et reformateur de l'administration francaise. La Revolution et l'Empire bouleverseront la vie rurale en Dordogne."},
+  funfact:"La Revolution francaise de 1789, vecue par Jean a 22 ans, abolit les privileges feodaux, la dime et les droits seigneuriaux. Pour les paysans de Dordogne, c'est un bouleversement concret : ils deviennent proprietaires de leurs terres.",
+  musicDesc:"En 1767, Haydn et Mozart composent. Dans les villages francais, on danse des bourrees et des contredanses.",
+  music:[
+    {label:"Mozart — La Flute enchantee",sub:"1791 — L'opera feerique de Mozart",url:yt("Mozart Flute enchantee Queen of the Night")},
+    {label:"La Marseillaise",sub:"1792 — L'hymne revolutionnaire",url:yt("La Marseillaise hymne France original 1792")},
+    {label:"Haydn — Symphonie n 94 'La Surprise'",sub:"1791 — L'humour classique",url:yt("Haydn Symphony 94 Surprise")},
+  ]
+},
+{
+  id:"bl2",name:"Jean BLEYTOU",year:1838,lat:44.725028,lng:0.409975,
+  place:"Saint-Innocence, Dordogne",color:"#c47d0a",lineage:"Bleytou",
+  relation:"Ancetre a la 5e generation",
+  img:wm("Victor_Hugo_by_Étienne_Carjat_1876_-_full.jpg"),
+  imgCaption:"Victor Hugo — il ecrit 'Les Miserables' quand Jean a 24 ans",
+  epoque:"En 1838, la revolution industrielle arrive en France. Le premier chemin de fer Paris-Saint-Germain a ete inaugure en 1837. La photographie sera inventee en 1839. Jean sera cultivateur toute sa vie a Saint-Innocence, la meme commune que ses ancetres depuis quatre generations.",
+  celeb:{name:"Victor Hugo",av:"VH",bg:"#1a3a6a",text:"Hugo a publie 'Notre-Dame de Paris' (1831) et ecrit 'Ruy Blas' (1838). Dans 24 ans, il ecrira 'Les Miserables' (1862), fresque sociale de la France du XIXe siecle."},
+  funfact:"En 1839, Daguerre invente la photographie — le daguerreotype. Pour la premiere fois, on peut figer un instant de realite. Cette revolution visuelle est aussi marquante que l'apparition d'internet un siecle et demi plus tard.",
+  musicDesc:"En 1838, le romantisme musical triomphe. Chopin joue ses nocturnes dans les salons parisiens, Berlioz invente la musique a programme.",
+  music:[
+    {label:"Chopin — Nocturne op.9 n 2",sub:"1832 — Le nocturne le plus celebre",url:yt("Chopin Nocturne Op 9 No 2")},
+    {label:"Berlioz — Symphonie fantastique",sub:"1830 — Recit musical obsessionnel",url:yt("Berlioz Symphonie Fantastique")},
+    {label:"Schubert — La Truite",sub:"1819 — Quintette bucolique",url:yt("Schubert Trout Quintet")},
+  ]
+},
+{
+  id:"bl_1875",name:"Jean BLEYTOU",year:1875,lat:44.703216,lng:0.379247,
+  place:"Pas de Molle, Dordogne",color:"#c47d0a",lineage:"Bleytou",
+  relation:"Arriere-arriere-grand-pere paternel",
+  img:wm("La_Roche-Chalais_vue_d'ensemble.jpg"),
+  imgCaption:"La Roche-Chalais, Dordogne — ou Jean s'installe comme mecanicien",
+  epoque:"En 1875, la IIIe Republique vient d'etre proclamee. Jean, ne a Pas de Molle, deviendra mecanicien a La Roche-Chalais — un metier nouveau lie a la mecanisation de l'agriculture. Il epousera Philomene Fromentin.",
+  celeb:{name:"Jules Ferry",av:"JF",bg:"#2a4a6a",text:"Jules Ferry (1832-1893) rend l'ecole primaire gratuite, laique et obligatoire (1881-82). Cette revolution educative touche directement les enfants de la campagne perigourdine, qui accedent pour la premiere fois a l'instruction."},
+  funfact:"La Roche-Chalais, a la frontiere de la Dordogne et de la Charente, est au confluent de la Dronne. La batellerie y etait active : on transportait vin, bois et pierres par les gabarres sur la riviere.",
+  musicDesc:"Sous la IIIe Republique, la musique francaise connait un renouveau avec Faure, Saint-Saens et le jeune Debussy.",
+  music:[
+    {label:"Saint-Saens — Le Carnaval des animaux",sub:"1886 — Humour et virtuosite",url:yt("Saint-Saens Carnaval des Animaux")},
+    {label:"Bizet — Carmen, Habanera",sub:"1875 — L'annee de naissance de Jean",url:yt("Bizet Carmen Habanera")},
+    {label:"Offenbach — Les Contes d'Hoffmann, Barcarolle",sub:"1881 — Opera fantastique",url:yt("Offenbach Barcarolle Tales of Hoffmann")},
+  ]
+},
+{
+  id:"bl_jr",name:"Jean Rene BLEYTOU",year:1905,lat:45.152775,lng:0.004297,
+  place:"La Roche-Chalais, Dordogne",color:"#c47d0a",lineage:"Bleytou",
+  relation:"Arriere-arriere-grand-pere paternel",
+  img:wm("Paris_-_Pair_of_bellows-shaped_automobile_horns_-_1906.jpg"),
+  imgCaption:"L'automobile au debut du XXe siecle — Jean Rene sera mecanicien",
+  epoque:"En 1905, Einstein publie la relativite restreinte. Jean Rene, fils de mecanicien, deviendra lui aussi mecanicien. Il epouse Denise Duchesne a Sainte-Maure-de-Touraine en 1928 et meurt a Paris (17e) en 1957.",
+  celeb:{name:"Albert Einstein",av:"AE",bg:"#2a4a7a",text:"En 1905, 'l'annee miraculeuse', Einstein publie quatre articles revolutionnaires dont la relativite restreinte et E=mc2. La physique moderne nait cette annee-la."},
+  funfact:"Jean Rene est mecanicien comme son pere Jean. Au debut du XXe siecle, le metier de mecanicien se transforme : du forgeron-marechal-ferrant, on passe au mecanicien automobile et motoriste. Une revolution technologique dans les campagnes.",
+  musicDesc:"En 1905, Debussy et Ravel renouvellent la musique francaise. Le phonographe permet d'ecouter de la musique chez soi pour la premiere fois.",
+  music:[
+    {label:"Debussy — La Mer",sub:"1905 — L'impressionnisme sonore",url:yt("Debussy La Mer orchestral")},
+    {label:"Ravel — Miroirs",sub:"1905 — Piano impressionniste",url:yt("Ravel Miroirs piano Oiseaux tristes")},
+    {label:"Debussy — Prelude a l'apres-midi d'un faune",sub:"1894 — La modernite musicale commence ici",url:yt("Debussy Prelude apres-midi faune")},
+  ]
+},
+{
+  id:"bl_den",name:"Denise Paulette DUCHESNE",year:1910,lat:47.109004,lng:0.619573,
+  place:"Sainte-Maure-de-Touraine",color:"#c47d0a",lineage:"Bleytou",
+  relation:"Arriere-arriere-grand-mere paternelle",
+  img:wm("Château_de_Chenonceau_01.jpg"),
+  imgCaption:"Le chateau de Chenonceau — joyau de la Touraine, 'le Jardin de la France'",
+  epoque:"En 1910, Sainte-Maure-de-Touraine est une bourgade agricole de la 'douceur angevine'. Denise sera couturiere. La Touraine, parsemee de chateaux de la Loire, est surnommee 'le Jardin de la France'. Son pere Paul est ne en 1873, sa mere Marie Louise Marnay en 1882.",
+  celeb:{name:"Honore de Balzac",av:"HB",bg:"#5a3a1a",text:"Balzac (1799-1850), natif de Tours, a immortalise la Touraine dans 'Le Lys dans la vallee' et 'La Comedie humaine'. Ses descriptions de la campagne tourangelle correspondent exactement au paysage ou grandit Denise."},
+  funfact:"Le fromage de Sainte-Maure-de-Touraine, buche de chevre traversee d'une paille de seigle, est l'un des plus celebres fromages de France. Son AOC date de 1990. La paille porte le nom du fromager qui l'a fabrique.",
+  musicDesc:"En 1910, la musique francaise est a un tournant : Debussy, Ravel et Satie inventent de nouvelles harmonies. Les bals musette animent les campagnes.",
+  music:[
+    {label:"Ravel — Daphnis et Chloe",sub:"1912 — Ballet pour les Ballets russes",url:yt("Ravel Daphnis Chloe Suite 2")},
+    {label:"Debussy — La Cathedrale engloutie",sub:"1910 — Prelude pour piano",url:yt("Debussy Cathedrale engloutie piano")},
+    {label:"Satie — Gnossienne n 1",sub:"1890 — Mystere et repetition",url:yt("Satie Gnossienne 1 piano")},
+  ]
+},
+{
+  id:"bl3",name:"Annick Denise BLEYTOU",year:1934,lat:47.109004,lng:0.619573,
+  place:"Sainte-Maure-de-Touraine",color:"#c47d0a",lineage:"Bleytou",
+  relation:"Arriere-grand-mere paternelle",
+  img:wm("Sainte-Maure-de-Touraine_(Indre-et-Loire).jpg"),
+  imgCaption:"Sainte-Maure-de-Touraine — terre natale de la famille Bleytou/Duchesne",
+  epoque:"En 1934, la crise economique mondiale frappe la France. Hitler a pris le pouvoir en Allemagne (1933). En Touraine, la vie rurale reste relativement preservee. Annick epousera Jacques-Andre Tourdot et mourra a Broons (Cotes-d'Armor) en 2022.",
+  celeb:{name:"Josephine Baker",av:"JB",bg:"#8a4a00",text:"Josephine Baker est la star de Paris. Danseuse, chanteuse, espionne de la Resistance, mere adoptive de douze enfants. En 2021, elle entre au Pantheon — premiere femme noire a recevoir cet honneur national."},
+  funfact:"La Touraine, 'Jardin de la France', est celebre pour la purete de son francais — on dit que le 'meilleur francais' se parle en Touraine, entre Tours et Amboise. C'est aussi la region des chateaux de la Loire : Chenonceau, Amboise, Villandry.",
+  musicDesc:"En 1934, la chanson francaise est reine. Piaf commence sa carriere, Django Reinhardt invente le jazz manouche. Les bals populaires font danser toute la France.",
+  music:[
+    {label:"Edith Piaf — La Vie en Rose",sub:"1945 — La chanson francaise par excellence",url:yt("Edith Piaf La Vie en Rose original")},
+    {label:"Django Reinhardt — Minor Swing",sub:"1937 — Le jazz manouche",url:yt("Django Reinhardt Minor Swing")},
+    {label:"Charles Trenet — La Mer",sub:"1943 — 'La mer qu'on voit danser...'",url:yt("Charles Trenet La Mer chanson")},
+  ]
+},
+// ═══════════════════════════════════════
+//  TOURDOT / VONTHRON / RAGOY
+// ═══════════════════════════════════════
+{
+  id:"to_jul",name:"Jules TOURDOT",year:1834,lat:47.683735,lng:6.495755,
+  place:"Lure, Haute-Saone",color:"#c0392b",lineage:"Tourdot",
+  relation:"Ancetre a la 5e generation",
+  img:wm("Lure_Sous-préfecture_(1).jpg"),
+  imgCaption:"Lure, Haute-Saone — ville natale de la lignee Tourdot",
+  epoque:"En 1834, la France est sous la Monarchie de Juillet. Lure, sous-prefecture de Haute-Saone, est une petite ville entre Vosges et Jura. Le pere de Jules, Francois Joseph Tourdot, est marchand de vin — le commerce vinicole structure l'economie locale.",
+  celeb:{name:"Louis-Philippe Ier",av:"LP",bg:"#4a3a2a",text:"Roi des Francais (1830-1848), Louis-Philippe Ier est le 'roi bourgeois'. Sous son regne, l'industrialisation accelere, le chemin de fer se developpe. La France se modernise entre revolution et conservatisme."},
+  funfact:"Lure se situe au pied du plateau des Mille Etangs, un paysage de landes et de tourbieres surnomme 'la petite Finlande'. Cette region naturelle unique en Franche-Comte est le vestige d'anciens glaciers.",
+  musicDesc:"En 1834, le romantisme musical est a son apogee. Chopin et Liszt rivalisent au piano dans les salons parisiens.",
+  music:[
+    {label:"Chopin — Etude op.10 n 3 'Tristesse'",sub:"1832 — Emotion pianistique pure",url:yt("Chopin Etude Op 10 No 3 Tristesse")},
+    {label:"Mendelssohn — Symphonie n 4 'Italienne'",sub:"1833 — Lumiere romantique",url:yt("Mendelssohn Symphony 4 Italian")},
+    {label:"Liszt — Consolation n 3",sub:"1850 — Lyrisme et recueillement",url:yt("Liszt Consolation No 3 piano")},
+  ]
+},
+{
+  id:"to_eug",name:"Eugene TOURDOT",year:1874,lat:47.683735,lng:6.495755,
+  place:"Lure, Haute-Saone",color:"#c0392b",lineage:"Tourdot",
+  relation:"Arriere-arriere-grand-pere paternel",
+  img:wm("Paris_Montmartre_Sacre-Coeur.jpg"),
+  imgCaption:"Le Sacre-Coeur de Montmartre — Eugene vivra rue des Abbesses (Paris 18e)",
+  epoque:"En 1874, la IIIe Republique s'installe apres la defaite de 1870 et la Commune de Paris. Eugene quittera Lure pour Paris, ou il sera courtier en assurance rue des Abbesses (Montmartre), puis secretaire rue Saint-Severin. Il meurt en 1921 a 46 ans.",
+  celeb:{name:"Claude Monet",av:"CM",bg:"#2a5a3a",text:"En 1874, Monet expose 'Impression, soleil levant' — le tableau qui donne son nom a l'impressionnisme. Le mouvement artistique le plus celebre de l'histoire nait cette annee-la."},
+  funfact:"Eugene a vecu a Montmartre, rue des Abbesses — en plein coeur du village des artistes ou Picasso, Modigliani et Utrillo creoient au meme moment. Il est mort a 46 ans a l'hopital de la Charite, rue Jacob (Paris 6e).",
+  musicDesc:"En 1874, la musique francaise se renouvelle. Saint-Saens, Bizet et Massenet dominent la scene. Montmartre deviendra bientot le quartier des cabarets.",
+  music:[
+    {label:"Bizet — Carmen",sub:"1875 — L'opera francais le plus joue au monde",url:yt("Bizet Carmen ouverture Habanera")},
+    {label:"Saint-Saens — Danse macabre",sub:"1874 — L'annee de naissance d'Eugene",url:yt("Saint-Saens Danse macabre")},
+    {label:"Offenbach — Galop infernal (Can-Can)",sub:"1858 — La folie de Montmartre",url:yt("Offenbach Galop Infernal Can-Can")},
+  ]
+},
+{
+  id:"to_ber",name:"Berthe RAGOY",year:1881,lat:47.329638,lng:5.048353,
+  place:"Dijon, Cote-d'Or",color:"#c0392b",lineage:"Tourdot",
+  relation:"Arriere-arriere-grand-mere paternelle",
+  img:wm("Palais_des_Ducs_de_Bourgogne_Dijon.jpg"),
+  imgCaption:"Le Palais des Ducs de Bourgogne a Dijon — ville natale de Berthe",
+  epoque:"En 1881, Dijon est la capitale de la Bourgogne, celebre pour ses vins, sa moutarde et son patrimoine ducal. Berthe, fille d'Anne Jeanne Ragoy (nee a Auxonne, Cote-d'Or), epousera Eugene Tourdot puis, apres son deces, Henri Gagnant en 1930. Elle vecut 8 rue du Cygne a Paris.",
+  celeb:{name:"Gustave Eiffel",av:"GE",bg:"#6a3a1a",text:"Gustave Eiffel (1832-1923) est ne a Dijon. L'ingenieur a concu la structure interne de la Statue de la Liberte (1886) avant de construire la tour qui porte son nom pour l'Exposition universelle de 1889."},
+  funfact:"Gustave Eiffel est ne a Dijon en 1832 — la ville natale de Berthe. La moutarde de Dijon, elle, est documentee depuis le XIVe siecle. La ville etait aussi la capitale des puissants ducs de Bourgogne, rivaux des rois de France.",
+  musicDesc:"En 1881, la France musicale est en pleine effervescence. Massenet et Gounod dominent l'opera, Debussy entre au Conservatoire.",
+  music:[
+    {label:"Massenet — Meditation de Thais",sub:"1894 — Le romantisme francais",url:yt("Massenet Meditation Thais violin")},
+    {label:"Gounod — Ave Maria",sub:"1859 — Le sacre et le profane",url:yt("Gounod Ave Maria")},
+    {label:"Chabrier — Espana",sub:"1883 — Energie orchestrale",url:yt("Chabrier Espana rhapsodie")},
+  ]
+},
+{
+  id:"to0",name:"Andree TOURDOT",year:1907,lat:48.852458,lng:2.345547,
+  place:"Paris, rue Saint-Severin (5e)",color:"#c0392b",lineage:"Tourdot",
+  relation:"Arriere-arriere-grand-mere paternelle",
+  img:wm("Paris_-_Pair_Church_of_Saint-Séverin_-_2050.jpg"),
+  imgCaption:"L'eglise Saint-Severin, Paris 5e — a cote du lieu de naissance d'Andree",
+  epoque:"En 1907, Paris est au coeur de la Belle Epoque. Picasso peint 'Les Demoiselles d'Avignon' et invente le cubisme. Andree nait rue Saint-Severin, dans le Quartier Latin. Elle epousera Louis Victor Vonthron en 1931 a Saint-Nazaire, divorcera en 1938 et mourra a Ciboure (Pays Basque) en 1982.",
+  celeb:{name:"Pablo Picasso",av:"PP",bg:"#8a2040",text:"En 1907, Picasso peint 'Les Demoiselles d'Avignon' et invente le cubisme a Montmartre. La rue Saint-Severin, ou nait Andree, est a 3 km de la. Paris est alors le centre du monde artistique."},
+  funfact:"La rue Saint-Severin est l'une des plus anciennes rues de Paris, datant du Moyen Age. L'eglise Saint-Severin (XIIIe siecle) est un joyau du gothique flamboyant. Le Quartier Latin, ou nait Andree, doit son nom au latin parle par les etudiants de la Sorbonne.",
+  musicDesc:"En 1907, Paris est la capitale mondiale de la musique. Debussy, Ravel, Satie composent. Les cabarets de Montmartre sont en plein essor.",
+  music:[
+    {label:"Ravel — Rapsodie espagnole",sub:"1907 — L'annee de naissance d'Andree",url:yt("Ravel Rhapsodie espagnole 1907")},
+    {label:"Debussy — Images pour orchestre",sub:"1912 — Iberia, la France et l'Espagne",url:yt("Debussy Images orchestre Iberia")},
+    {label:"Satie — Parade",sub:"1917 — Ballet cubiste avec Picasso",url:yt("Satie Parade ballet Cocteau")},
+  ]
+},
+{
+  id:"to_von",name:"Louis Victor Ignace VONTHRON",year:1881,lat:48.892278,lng:2.349813,
+  place:"Paris (18e arrondissement)",color:"#c0392b",lineage:"Tourdot",
+  relation:"Arriere-arriere-grand-pere paternel (par alliance)",
+  img:wm("Moulin_de_la_Galette.jpg"),
+  imgCaption:"Le Moulin de la Galette, Montmartre — quartier de naissance de Louis Victor",
+  epoque:"En 1881, le 18e arrondissement de Paris est en pleine transformation. Montmartre, encore semi-rural, devient le quartier des artistes. Louis Victor Vonthron epousera Andree Tourdot en 1931 a Saint-Nazaire. Leur fils Jacques-Andre portera le nom de sa mere, Tourdot.",
+  celeb:{name:"Auguste Renoir",av:"AR",bg:"#6a3a4a",text:"Renoir peint 'Le Bal du Moulin de la Galette' (1876) a Montmartre, exactement dans le quartier ou naitra Louis Victor cinq ans plus tard. Ce tableau incarne la joie de vivre du Montmartre populaire."},
+  funfact:"Le nom Vonthron est d'origine alsacienne-lorraine. L'installation a Montmartre (Paris 18e) au tournant du siecle correspond a une vague migratoire d'Alsaciens-Lorrains vers Paris apres l'annexion de 1871.",
+  musicDesc:"En 1881, Montmartre vibre. Le Chat Noir, premier cabaret artistique, ouvre en 1881. Toulouse-Lautrec, Satie et Debussy y seront bientot habitues.",
+  music:[
+    {label:"Satie — Trois morceaux en forme de poire",sub:"1903 — L'humour musical de Montmartre",url:yt("Satie Trois morceaux forme poire")},
+    {label:"Debussy — Suite bergamasque",sub:"1905 — Dont le celebre 'Clair de Lune'",url:yt("Debussy Suite bergamasque piano")},
+    {label:"Chansons de Montmartre — Le Temps des cerises",sub:"1866/1871 — Hymne de la Commune",url:yt("Le Temps des cerises chanson Commune Paris")},
+  ]
+},
+{
+  id:"to1",name:"Jacques-Andre TOURDOT",year:1929,lat:47.2743,lng:-2.211388,
+  place:"Saint-Nazaire, Loire-Atlantique",color:"#c0392b",lineage:"Tourdot",
+  relation:"Arriere-grand-pere paternel",
+  img:wm("SS_Normandie_Portrait.jpg"),
+  imgCaption:"Le paquebot Normandie — construit aux chantiers de Saint-Nazaire",
+  epoque:"En 1929, Saint-Nazaire est un grand port avec d'immenses chantiers navals. Le paquebot Normandie est en construction. La Grande Depression commence apres le krach de Wall Street. Jacques-Andre est le fils d'Andree Tourdot et de Louis Victor Vonthron — il porte le nom maternel.",
+  celeb:{name:"Charlie Chaplin",av:"CC",bg:"#2a2a2a",text:"Chaplin est la star mondiale du cinema muet. Son film 'Les Lumieres de la ville' (1931) et 'Le Dictateur' (1940), satire de Hitler, marqueront l'histoire du 7e art."},
+  funfact:"Le Normandie, construit aux chantiers de Saint-Nazaire, etait le plus grand et le plus luxueux paquebot du monde. Lance en 1935 (Jacques-Andre a 6 ans), il traversait l'Atlantique en 4 jours. Il sera detruit par un incendie accidentel a New York en 1942.",
+  musicDesc:"En 1929, le jazz americain debarque en Europe. Django Reinhardt nait a la guitare, Josephine Baker enflamme Paris.",
+  music:[
+    {label:"Django Reinhardt — Minor Swing",sub:"1937 — Le jazz manouche",url:yt("Django Reinhardt Minor Swing")},
+    {label:"Josephine Baker — J'ai deux amours",sub:"1930 — L'icone des Annees folles",url:yt("Josephine Baker J'ai deux amours 1930")},
+    {label:"Edith Piaf — Mon legionnaire",sub:"1936 — La chanson realiste",url:yt("Edith Piaf Mon legionnaire")},
+  ]
+},
+// ═══════════════════════════════════════
+//  BAUDEMONT / JUSSAUME / BOURDEIX
+// ═══════════════════════════════════════
+{
+  id:"ju0",name:"Auguste Emile JUSSAUME",year:1880,lat:48.006707,lng:0.202763,
+  place:"Le Mans, Sarthe",color:"#b04a00",lineage:"Baudemont",
+  relation:"Arriere-arriere-arriere-grand-pere (branche maternelle)",
+  img:wm("Circuit_de_la_Sarthe_-_24_Heures_du_Mans.jpg"),
+  imgCaption:"Les 24 Heures du Mans — Le Mans sera celebre pour ses courses automobiles",
+  epoque:"En 1880, Le Mans est une ville en pleine industrialisation. L'ecole devient obligatoire (loi Jules Ferry). Auguste, ne de mere inconnue puis adopte, deviendra serrurier — un parcours qui reflete les realites sociales de l'epoque.",
+  celeb:{name:"Louis Pasteur",av:"LP",bg:"#0a6a4a",text:"Pasteur decouvre les microbes et developpe le vaccin contre la rage (1885). L'hygiene et la medecine modernes naissent, transformant radicalement l'esperance de vie."},
+  funfact:"Les 24 Heures du Mans, la plus celebre course d'endurance automobile au monde, seront creees en 1923 quand Auguste aura 43 ans. Le circuit de la Sarthe attire chaque annee 250 000 spectateurs.",
+  musicDesc:"En 1880, Paris bruisse de musique. Offenbach vient de mourir, les music-halls s'animent, la Belle Epoque musicale se prepare.",
+  music:[
+    {label:"Offenbach — Galop infernal (Can-Can)",sub:"1858 — La danse folle de Paris",url:yt("Offenbach Galop Infernal Can-Can")},
+    {label:"Saint-Saens — Carnaval des animaux",sub:"1886 — Chaque animal a sa musique",url:yt("Saint-Saens Carnaval des Animaux")},
+    {label:"Bizet — Carmen, ouverture",sub:"1875 — L'opera francais universel",url:yt("Bizet Carmen ouverture")},
+  ]
+},
+{
+  id:"bou_gas",name:"Gaston BOURDEIX",year:1885,lat:45.67,lng:0.11,
+  place:"Vindelle, Charente",color:"#b04a00",lineage:"Baudemont",
+  relation:"Arriere-arriere-grand-pere (branche maternelle)",
+  img:wm("Angoulême_-_Cathédrale_Saint-Pierre.jpg"),
+  imgCaption:"La cathedrale d'Angouleme — la Charente, terre de Gaston Bourdeix",
+  epoque:"En 1885, la Charente est une region de vignobles et de cognac. Gaston sera tailleur de pierre, puis capitaine d'artillerie au 31e RAC pendant la Grande Guerre, enfin greffier de justice de paix. Un parcours remarquable qui temoigne d'une grande mobilite sociale.",
+  celeb:{name:"Guy de Maupassant",av:"GM",bg:"#5a3a2a",text:"Maupassant (1850-1893) publie ses nouvelles les plus celebres dans les annees 1880 : 'Boule de Suif', 'Le Horla'. Sa peinture de la France rurale correspond au monde dans lequel grandit Gaston."},
+  funfact:"La Charente est le coeur du vignoble de Cognac. L'eau-de-vie de Cognac, distillee depuis le XVIIe siecle, est aujourd'hui le premier spiritueux francais exporte au monde. Vindelle se situe a 20 km d'Angouleme, future capitale de la bande dessinee.",
+  musicDesc:"Les annees 1880 voient l'essor du cafe-concert et de la chanson populaire francaise. Le phonographe d'Edison (1877) commence a se repandre.",
+  music:[
+    {label:"Massenet — Le Cid, ballet",sub:"1885 — L'annee de naissance de Gaston",url:yt("Massenet Le Cid ballet")},
+    {label:"Delibes — Lakme, Duo des fleurs",sub:"1883 — Opera exotique francais",url:yt("Delibes Lakme Flower Duet")},
+    {label:"Chabrier — Joyeuse marche",sub:"1888 — Energie et panache",url:yt("Chabrier Joyeuse marche orchestre")},
+  ]
+},
+{
+  id:"go0",name:"Marguerite Emilie GOBERT",year:1909,lat:50.402129,lng:4.476172,
+  place:"Montignies-sur-Sambre, Belgique",color:"#b04a00",lineage:"Baudemont",
+  relation:"Arriere-arriere-grand-mere (branche maternelle)",
+  img:wm("Marie_Curie_c1920.jpg"),
+  imgCaption:"Marie Curie — seule personne a avoir obtenu deux Prix Nobel",
+  epoque:"En 1909, Montignies-sur-Sambre est une ville industrielle pres de Charleroi. Les mines de charbon et les acieries font travailler toute la population. Marguerite deviendra une heroine de la Resistance — fusillee par les nazis le 12 aout 1944, six jours avant la Liberation de Paris.",
+  celeb:{name:"Marie Curie",av:"MC",bg:"#1a5a4a",text:"Marie Curie est la seule personne au monde a avoir remporte deux Prix Nobel (Physique 1903, Chimie 1911). Nee en Pologne, elle incarne le courage et la determination face aux prejuges."},
+  funfact:"Marguerite Gobert a ete fusillee a Sury-aux-Bois (Loiret) le 12 aout 1944, a 34 ans. Son nom figure au Memorial des resistants. Six jours plus tard, Paris etait libere. Son sacrifice incarne celui de milliers de resistants anonymes.",
+  musicDesc:"L'entre-deux-guerres belge est marque par le jazz, la chanson realiste et une riche tradition musicale wallonne.",
+  music:[
+    {label:"Le Chant des partisans",sub:"1943 — L'hymne de la Resistance",url:yt("Chant des Partisans Resistance")},
+    {label:"Jacques Brel — Quand on n'a que l'amour",sub:"1956 — Le grand Bruxellois",url:yt("Jacques Brel Quand on n'a que l'amour")},
+    {label:"Ravel — Pavane pour une infante defunte",sub:"1899 — Melancolie et dignite",url:yt("Ravel Pavane pour une infante defunte")},
+  ]
+},
+{
+  id:"bau_lou",name:"Louis BAUDEMONT",year:1905,lat:48.801287,lng:2.266485,
+  place:"Clamart, Hauts-de-Seine",color:"#b04a00",lineage:"Baudemont",
+  relation:"Arriere-arriere-grand-pere (branche maternelle)",
+  img:wm("Clamart_-_Mairie.jpg"),
+  imgCaption:"Clamart — banlieue sud de Paris, au debut du XXe siecle",
+  epoque:"En 1905, Clamart est une commune residentielle au sud de Paris, en plein developpement. Louis epousera Marguerite Gobert, l'heroine de la Resistance. Il mourra a Montpellier en 1968, durant les evenements de Mai 68.",
+  celeb:{name:"Jean Jaures",av:"JJ",bg:"#8a2a2a",text:"Jaures (1859-1914), figure du socialisme francais, milite pour la paix et la justice sociale. Son assassinat en 1914 symbolise la fin d'une epoque. Les ideaux de Jaures inspireront la Resistance a laquelle participera Marguerite."},
+  funfact:"Clamart possede une foret domaniale de 460 hectares, l'une des plus grandes de la petite couronne parisienne. Autrefois celebre pour ses carrieres de craie (les 'catacombes de Clamart'), la ville est aujourd'hui un lieu de vie prisee au sud de Paris.",
+  musicDesc:"En 1905, la musique francaise est a son zenith avec Debussy et Ravel. Le cinema muet nait — les freres Lumiere ont projete leur premier film dix ans plus tot.",
+  music:[
+    {label:"Debussy — Estampes",sub:"1903 — Pagodes, Soiree dans Grenade, Jardins sous la pluie",url:yt("Debussy Estampes piano Jardins sous la pluie")},
+    {label:"Ravel — Jeux d'eau",sub:"1901 — Le piano comme un jet d'eau",url:yt("Ravel Jeux d'eau piano")},
+    {label:"Franck — Sonate pour violon en la",sub:"1886 — Le romantisme franco-belge",url:yt("Franck Violin Sonata A major")},
+  ]
+},
+{
+  id:"bau_jac",name:"Jacqueline BAUDEMONT",year:1939,lat:48.910973,lng:2.546648,
+  place:"Clichy-sous-Bois, Seine-Saint-Denis",color:"#b04a00",lineage:"Baudemont",
+  relation:"Arriere-grand-mere (branche maternelle)",
+  img:wm("Paris_-_German_soldiers_on_Champs-Elysees_1940.jpg"),
+  imgCaption:"Paris occupe, 1940 — Jacqueline nait a la veille de la guerre",
+  epoque:"En 1939, Jacqueline nait a Clichy-sous-Bois quelques semaines avant le debut de la Seconde Guerre mondiale. Sa mere Marguerite Gobert sera fusillee par les nazis en 1944. Jacqueline grandira orpheline de mere dans une France en reconstruction.",
+  celeb:{name:"Charles de Gaulle",av:"CG",bg:"#1a3a6a",text:"Le 18 juin 1940, de Gaulle lance son appel depuis Londres. La Resistance s'organise. Marguerite Gobert, mere de Jacqueline, y participera et y donnera sa vie. La Liberation viendra en 1944."},
+  funfact:"Clichy-sous-Bois, en Seine-Saint-Denis, est l'une des communes les plus denses de France. En 1939, c'etait encore un bourg semi-rural de la banlieue est de Paris. La ville est aujourd'hui reliee au Grand Paris Express.",
+  musicDesc:"1939 : la France est entre la fete et l'angoisse. La chanson francaise atteint des sommets avec Piaf, Trenet, Tino Rossi. Le swing americain debarque.",
+  music:[
+    {label:"Edith Piaf — Mon legionnaire",sub:"1936 — Chanson realiste",url:yt("Edith Piaf Mon legionnaire 1936")},
+    {label:"Django Reinhardt — Nuages",sub:"1940 — Jazz sous l'Occupation",url:yt("Django Reinhardt Nuages jazz manouche")},
+    {label:"Glenn Miller — In the Mood",sub:"1939 — L'annee de naissance de Jacqueline",url:yt("Glenn Miller In the Mood 1939")},
+  ]
+},
+{
+  id:"bou_ml",name:"Marie Louise BOURDEIX",year:1910,lat:48.006707,lng:0.202763,
+  place:"Le Mans, Sarthe",color:"#b04a00",lineage:"Baudemont",
+  relation:"Arriere-arriere-grand-mere (branche maternelle)",
+  img:wm("Le_Mans_-_Cathédrale_Saint-Julien_01.jpg"),
+  imgCaption:"La cathedrale Saint-Julien du Mans — Le Mans, ville natale de Marie Louise",
+  epoque:"En 1910, Le Mans est une ville industrielle et commerciale. Marie Louise, fille de Gaston Bourdeix (tailleur de pierre puis greffier) et de Marie Patri (couturiere), epousera Jean-Baptiste Bassaisteguy. Elle mourra a Draguignan en 1983.",
+  celeb:{name:"Wilbur Wright",av:"WW",bg:"#4a3a2a",text:"En 1908, Wilbur Wright effectue des vols de demonstration au Mans, au circuit des Hunaudieres. C'est au Mans que l'aviation convainc definitivement l'Europe. Marie Louise nait deux ans apres ce moment historique."},
+  funfact:"C'est au Mans, en 1908, que Wilbur Wright a convaincu l'Europe que l'avion etait une realite. Ses vols de demonstration, devant des milliers de spectateurs, ont fait du Mans le berceau europeen de l'aviation.",
+  musicDesc:"En 1910, la musique francaise est en plein renouveau. Debussy compose ses Preludes, Ravel ses premieres pieces orchestrales.",
+  music:[
+    {label:"Debussy — La Fille aux cheveux de lin",sub:"1910 — Prelude delicat",url:yt("Debussy Fille cheveux de lin piano")},
+    {label:"Ravel — Ma Mere l'Oye",sub:"1910 — Contes de fees en musique",url:yt("Ravel Ma Mere l'Oye orchestre")},
+    {label:"Stravinsky — L'Oiseau de feu",sub:"1910 — Revolution orchestrale",url:yt("Stravinsky Firebird Suite 1910")},
+  ]
+},
+// ═══════════════════════════════════════
+//  CHERRIER
+// ═══════════════════════════════════════
+{
+  id:"ch_chr",name:"Christian CHERRIER",year:1957,lat:45.661081,lng:3.071816,
+  place:"Saint-Saturnin, Puy-de-Dome",color:"#2a8c5a",lineage:"Cherrier",
+  relation:"Grand-pere maternel",
+  img:wm("Saint-Saturnin_(63)_Château_royal.jpg"),
+  imgCaption:"Le chateau royal de Saint-Saturnin — l'un des plus beaux villages d'Auvergne",
+  epoque:"En 1957, la France est en pleine croissance des Trente Glorieuses. Saint-Saturnin, village medieval au pied de la chaine des Puys, est l'un des plus beaux villages d'Auvergne avec son chateau royal et son eglise romane du XIIe siecle.",
+  celeb:{name:"Blaise Pascal",av:"BP",bg:"#2a5a4a",text:"Pascal (1623-1662), ne a Clermont-Ferrand a 15 km de Saint-Saturnin, est l'un des plus grands esprits de l'histoire : mathematicien, physicien, philosophe. Son experience du Puy de Dome (1648) sur la pression atmospherique est un jalon de la science moderne."},
+  funfact:"Saint-Saturnin possede une eglise romane du XIIe siecle classee, consideree comme l'une des cinq 'eglises majeures' d'Auvergne. Le village est domine par la chaine des Puys, inscrite au patrimoine mondial de l'UNESCO depuis 2018.",
+  musicDesc:"Les annees 1950-60 voient l'explosion de la chanson francaise. Brassens, Brel, Ferre reinventent l'art du texte en musique.",
+  music:[
+    {label:"Georges Brassens — Les Copains d'abord",sub:"1964 — L'ami de tous",url:yt("Georges Brassens Les Copains d'abord")},
+    {label:"Jacques Brel — Ne me quitte pas",sub:"1959 — La supplication universelle",url:yt("Jacques Brel Ne me quitte pas")},
+    {label:"Leo Ferre — Avec le temps",sub:"1970 — Poesie et revolte",url:yt("Leo Ferre Avec le temps")},
+  ]
+},
+{
+  id:"ch_pas",name:"Pascale BASSAISTEGUY",year:1961,lat:47.903573,lng:1.907086,
+  place:"Orleans, Loiret",color:"#2a8c5a",lineage:"Cherrier",
+  relation:"Grand-mere maternelle",
+  img:wm("Orléans_-_Cathédrale_Sainte-Croix_-_2021.jpg"),
+  imgCaption:"La cathedrale Sainte-Croix d'Orleans — la ville de Jeanne d'Arc",
+  epoque:"En 1961, la France est en plein boom economique. Orleans, ville de Jeanne d'Arc, se modernise. Pascale, fille de Gaston Bassaisteguy (basque de Saint-Jean-Pied-de-Port) et de Jacqueline Baudemont, porte en elle l'heritage basque et parisien.",
+  celeb:{name:"Jeanne d'Arc",av:"JA",bg:"#6a4a1a",text:"Jeanne d'Arc (1412-1431) a libere Orleans du siege anglais en 1429, tournant decisif de la guerre de Cent Ans. La ville celebre chaque annee les Fetes johanniques en mai. Pascale est nee dans la cite de la Pucelle."},
+  funfact:"Orleans est indissociable de Jeanne d'Arc, qui y leva le siege anglais en 1429 a 17 ans. La ville celebre l'evenement chaque annee lors des Fetes johanniques, les plus anciennes fetes civiques de France (depuis 1430).",
+  musicDesc:"Les annees 1960 : ye-ye, rock francais, et la chanson a texte. Johnny Hallyday, Sylvie Vartan, Francoise Hardy incarnent la jeunesse.",
+  music:[
+    {label:"Francoise Hardy — Tous les garcons et les filles",sub:"1962 — La voix de la jeunesse",url:yt("Francoise Hardy Tous les garcons et les filles")},
+    {label:"Serge Gainsbourg — La Javanaise",sub:"1963 — L'elegance parisienne",url:yt("Serge Gainsbourg La Javanaise")},
+    {label:"Claude Nougaro — Toulouse",sub:"1967 — Chanson d'Occitanie",url:yt("Claude Nougaro Toulouse")},
+  ]
+},
+{
+  id:"ch_flo",name:"Floriane CHERRIER",year:1993,lat:46.761763,lng:4.832693,
+  place:"Saint-Remy, Saone-et-Loire",color:"#2a8c5a",lineage:"Cherrier",
+  relation:"Mere",
+  img:wm("Roche_de_Solutré.jpg"),
+  imgCaption:"La Roche de Solutre — embleme de la Bourgogne du Sud, pres de Saint-Remy",
+  epoque:"En 1993, le traite de Maastricht vient d'etre ratifie — l'Union europeenne est nee. Internet est encore balbutiant (le World Wide Web a 2 ans). Saint-Remy, en Saone-et-Loire, est au coeur de la Bourgogne viticole, entre Macon et Chalon-sur-Saone.",
+  celeb:{name:"Alphonse de Lamartine",av:"AL",bg:"#3a5a3a",text:"Lamartine (1790-1869), ne a Macon a quelques kilometres de Saint-Remy, est l'un des fondateurs du romantisme francais. Son poeme 'Le Lac' (1820) est l'un des plus celebres de la langue francaise. Il fut aussi homme politique et contribua a l'abolition de l'esclavage en 1848."},
+  funfact:"La Roche de Solutre, a 20 km de Saint-Remy, est un site prehistorique majeur qui a donne son nom au Solutreen (-22 000 a -17 000 ans). Francois Mitterrand en avait fait le lieu de son ascension rituelle chaque Pentecote.",
+  musicDesc:"En 1993, la musique francaise se diversifie : rap (IAM, NTM), variete, rock alternatif (Noir Desir). Daft Punk prepare sa revolution electronique.",
+  music:[
+    {label:"IAM — Je danse le Mia",sub:"1994 — Le rap francais emergent",url:yt("IAM Je danse le Mia")},
+    {label:"Noir Desir — Le Vent nous portera",sub:"2001 — Rock alternatif francais",url:yt("Noir Desir Le vent nous portera")},
+    {label:"Daft Punk — Da Funk",sub:"1995 — L'electronique francaise nait",url:yt("Daft Punk Da Funk")},
+  ]
+},
+// ═══════════════════════════════════════
+//  GENERATION ACTUELLE
+// ═══════════════════════════════════════
+{
+  id:"to2",name:"Daniel TOURDOT",year:1953,lat:48.861799,lng:2.445965,
+  place:"Montreuil, Seine-Saint-Denis",color:"#c0392b",lineage:"Tourdot",
+  relation:"Grand-pere paternel",
+  img:wm("Everest_North_Face_toward_Base_Camp_Tibet_Luca_Galuzzi_2006.jpg"),
+  imgCaption:"L'Everest — conquis pour la premiere fois en 1953, l'annee de naissance de Daniel",
+  epoque:"En 1953, la France connait les 'Trente Glorieuses' — trente ans de croissance economique sans precedent. Le 29 mai, Hillary et Tenzing atteignent le sommet de l'Everest. La television arrive dans les foyers.",
+  celeb:{name:"Edmund Hillary",av:"EH",bg:"#0a5a3a",text:"Le 29 mai 1953, Edmund Hillary et Tenzing Norgay atteignent le sommet de l'Everest — 8 849 metres. La montagne la plus haute du monde est vaincue l'annee de naissance de Daniel."},
+  funfact:"Montreuil etait celebre pour ses peches — les 'peches de Montreuil', cultivees en espalier contre des murs chauffes par le soleil (les 'murs a peches'), etaient reputees depuis le XVIIe siecle. Quelques murs subsistent encore, classes monument historique.",
+  musicDesc:"En 1953, le rock'n'roll est sur le point d'exploser. Elvis a 18 ans. En France, la chanson de variete regne.",
+  music:[
+    {label:"Yves Montand — Les Feuilles mortes",sub:"1950 — Prevert et Kosma",url:yt("Yves Montand Les feuilles mortes Autumn Leaves")},
+    {label:"Elvis Presley — That's All Right",sub:"1954 — La naissance du rock'n'roll",url:yt("Elvis Presley That's All Right 1954")},
+    {label:"Boris Vian — Le Deserteur",sub:"1954 — La chanson pacifiste",url:yt("Boris Vian Le Deserteur 1954")},
+  ]
+},
+{
+  id:"ed0",name:"Edouard TOURDOT",year:1991,lat:49.051428,lng:2.10076,
+  place:"Pontoise, Val-d'Oise",color:"#c0392b",lineage:"Tourdot",
+  relation:"Pere",
+  img:wm("First_Web_Server.jpg"),
+  imgCaption:"Le premier serveur web au CERN (1991) — le World Wide Web nait l'annee d'Edouard",
+  epoque:"En 1991, l'URSS s'effondre — la Guerre froide prend fin. Tim Berners-Lee invente le World Wide Web au CERN a Geneve. Le mur de Berlin est tombe deux ans plus tot. Un nouveau monde s'ouvre.",
+  celeb:{name:"Tim Berners-Lee",av:"TB",bg:"#1a3a8a",text:"Tim Berners-Lee invente le World Wide Web au CERN en 1991. Il ne depose aucun brevet — il offre son invention au monde entier. Sans lui, pas d'internet tel que nous le connaissons."},
+  funfact:"Pontoise est une ville d'art : Camille Pissarro y a peint certains de ses plus beaux tableaux impressionnistes dans les annees 1870-80. La ville possede un musee qui lui est dedie.",
+  musicDesc:"1991 : explosion du grunge et du rock alternatif. Nirvana sort 'Nevermind'. En France, Mylene Farmer et MC Solaar dominent.",
+  music:[
+    {label:"Nirvana — Smells Like Teen Spirit",sub:"1991 — La revolution grunge",url:yt("Nirvana Smells Like Teen Spirit 1991")},
+    {label:"Mylene Farmer — Desenchantee",sub:"1991 — La chanson francaise de l'annee",url:yt("Mylene Farmer Desenchantee 1991")},
+    {label:"MC Solaar — Bouge de la",sub:"1991 — Le rap poetique francais",url:yt("MC Solaar Bouge de la 1991")},
+  ]
+},
+{
+  id:"fr0",name:"Freya TOURDOT CHERRIER",year:2020,lat:44.802744,lng:-0.586952,
+  place:"Talence, Gironde",color:"#c0392b",lineage:"Tourdot",
+  relation:"Fille ainee",
+  img:wm("Place_de_la_Bourse_Bordeaux_de_nuit.jpg"),
+  imgCaption:"La Place de la Bourse a Bordeaux, miroir d'eau — a 5 km de Talence",
+  epoque:"2020 : l'annee du Covid-19. Le monde entier se confine pour la premiere fois. La science cree un vaccin en temps record — onze mois. Freya nait dans une epoque de bouleversements sanitaires, climatiques et technologiques sans precedent.",
+  celeb:{name:"Montesquieu",av:"MQ",bg:"#4a3060",text:"Charles de Montesquieu (1689-1755) est ne au chateau de la Brede, a 10 km de Talence. Son 'Esprit des lois' a fonde la theorie de la separation des pouvoirs, pilier de toutes les democraties modernes. Freya est nee dans sa region."},
+  funfact:"Talence abrite le campus universitaire de Bordeaux, l'un des plus grands de France. La ville est aussi traversee par la 'ligne verte' du tramway bordelais, modele de mobilite durable en Europe.",
+  musicDesc:"En 2020, la musique se consomme en streaming. TikTok propulse des titres a l'echelle mondiale en quelques jours. La creation musicale n'a jamais ete aussi democratisee.",
+  music:[
+    {label:"Stromae — Alors on danse",sub:"2009 — Le Belge qui a conquis le monde",url:yt("Stromae Alors on danse")},
+    {label:"The Weeknd — Blinding Lights",sub:"2019 — Tube planetaire",url:yt("The Weeknd Blinding Lights")},
+    {label:"Angele — Tout oublier",sub:"2018 — Pop francophone contemporaine",url:yt("Angele Tout oublier")},
+  ]
+},
+{
+  id:"bj0",name:"Bjorn TOURDOT CHERRIER",year:2023,lat:47.389446,lng:8.052714,
+  place:"Aarau, Argovie, Suisse",color:"#c0392b",lineage:"Tourdot",
+  relation:"Fils",
+  img:wm("Einstein_Aarau.jpg"),
+  imgCaption:"L'ancienne Kantonsschule d'Aarau — ou Einstein etudia en 1895-96",
+  epoque:"2023 : l'intelligence artificielle generative (ChatGPT, GPT-4) transforme le monde. Bjorn nait en Suisse, pays au carrefour de quatre cultures (francaise, allemande, italienne, romanche) et siege du CERN, le plus grand laboratoire de physique au monde.",
+  celeb:{name:"Albert Einstein",av:"AE",bg:"#10a050",text:"Einstein a etudie au lycee cantonal d'Aarau en 1895-96 — dans la ville meme de Bjorn. C'est la, a 16 ans, qu'il a eu ses premieres intuitions sur la relativite. Bjorn est ne dans la ville d'Einstein."},
+  funfact:"Aarau, capitale du canton d'Argovie, fut brievement la premiere capitale de la Suisse moderne (Republique helvetique, 1798). Son Altstadt (vieille ville) est celebre pour ses pignons peints (Dachimmel), uniques en Europe.",
+  musicDesc:"En 2023, la frontiere entre musique humaine et musique generee par IA s'estompe. Le streaming total redefinit la creation et la diffusion musicales.",
+  music:[
+    {label:"Taylor Swift — Anti-Hero",sub:"2022 — Phenomene culturel mondial",url:yt("Taylor Swift Anti-Hero")},
+    {label:"Zaho de Sagazan — La Symphonie des eclairs",sub:"2023 — Revelation francaise",url:yt("Zaho de Sagazan La Symphonie des eclairs")},
+    {label:"Daft Punk — Around the World",sub:"1997 — Les robots francais, heritage electro",url:yt("Daft Punk Around the World")},
+  ]
+},
+{
+  id:"jm0",name:"Jeanne Madeleine TOURDOT CHERRIER",year:2025,lat:47.389446,lng:8.052714,
+  place:"Aarau, Argovie, Suisse",color:"#c0392b",lineage:"Tourdot",
+  relation:"Fille cadette",
+  img:wm("Aarau_Altstadt.jpg"),
+  imgCaption:"La vieille ville d'Aarau — ses celebres pignons peints (Dachimmel)",
+  epoque:"2025 : l'intelligence artificielle s'integre dans la vie quotidienne. Les defis climatiques et geopolitiques redefinnissent les priorites mondiales. Jeanne Madeleine nait dans une Suisse au coeur de l'Europe, heritiere de pres de quatre siecles d'histoire familiale.",
+  celeb:{name:"Friedrich Durrenmatt",av:"FD",bg:"#3a5a4a",text:"Durrenmatt (1921-1990), dramaturge et romancier suisse ne a Konolfingen (Berne), est l'un des plus grands ecrivains de langue allemande du XXe siecle. 'La Visite de la vieille dame' et 'Les Physiciens' interrogent la responsabilite morale face au pouvoir."},
+  funfact:"Le prenom Jeanne Madeleine est un echo a travers les siecles : Jeanne Marie Sylvestre (1778), Jeanne Malache, Jeanne Ferre (1740), Jeanne Olhasso Gastellu (1860)... Le prenom Jeanne traverse la genealogie depuis des generations.",
+  musicDesc:"En 2025, la creation musicale est plus diverse que jamais : intelligence artificielle, neo-classique, pop globalisee, retour du vinyle.",
+  music:[
+    {label:"Pomme — Les Oiseaux",sub:"2023 — Chanson francaise contemporaine",url:yt("Pomme Les Oiseaux")},
+    {label:"Hania Rani — Esja",sub:"2019 — Neo-classique europeen",url:yt("Hania Rani Esja piano")},
+    {label:"Nils Frahm — Says",sub:"2013 — Electronique et piano minimaliste",url:yt("Nils Frahm Says")},
+  ]
+}
+];
+
+// Update stats
+document.getElementById('stat-anc').textContent=DATA.length;
+
+// ═══════════════════════════════
+//  INTRO STARS
+// ═══════════════════════════════
+(function(){
+  const sb=document.getElementById('stars');
+  for(let i=0;i<100;i++){
+    const s=document.createElement('span');
+    s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s`;
+    sb.appendChild(s);
+  }
+})();
+document.getElementById('intro-btn').addEventListener('click',()=>{
+  const el=document.getElementById('intro');
+  el.style.transition='opacity .5s';el.style.opacity='0';
+  setTimeout(()=>{el.style.display='none';map.invalidateSize();},550);
+});
+
+// ═══════════════════════════════
+//  MAP
+// ═══════════════════════════════
+const map=L.map('map',{center:[47,4],zoom:5,zoomControl:false,tap:true,tapTolerance:15});
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+  attribution:'CartoDB / OSM',subdomains:'abcd',maxZoom:19}).addTo(map);
+L.control.zoom({position:'topright'}).addTo(map);
+// Force Leaflet to recalculate after layout
+setTimeout(()=>map.invalidateSize(),200);
+window.addEventListener('resize',()=>map.invalidateSize());
+
+const markers={};
+function makeMarker(a){
+  const icon=L.divIcon({
+    html:`<div class="m-dot" style="--mc:${a.color};background:${a.color}"></div>`,
+    className:'',iconSize:[14,14],iconAnchor:[7,7],popupAnchor:[0,-10]
+  });
+  const m=L.marker([a.lat,a.lng],{icon});
+  m.bindPopup(`<div class="pop-inner">
+    <div class="pop-name">${a.name}</div>
+    <div class="pop-sub">${a.place} — ${a.year||'?'}</div>
+    <button class="pop-btn" onclick="openStory('${a.id}');map.closePopup()">Decouvrir son epoque</button>
+  </div>`,{closeButton:false,maxWidth:240});
+  m.on('mouseover',function(){this.openPopup()});
+  m.on('click',()=>openStory(a.id));
+  markers[a.id]=m;
+  return m;
+}
+const layerGroup=L.layerGroup().addTo(map);
+DATA.forEach(a=>layerGroup.addLayer(makeMarker(a)));
+
+// ═══════════════════════════════
+//  FILTER SYSTEM
+// ═══════════════════════════════
+const LINEAGES=[
+  {key:"Van Dijk",label:"Van Dijk (Pays-Bas)",color:"#2c5f8a"},
+  {key:"Bassaisteguy",label:"Bassaisteguy (Pays basque)",color:"#7b3fa0"},
+  {key:"Louis",label:"Louis (Lorraine)",color:"#1a7561"},
+  {key:"Bleytou",label:"Bleytou / Duchesne (Dordogne)",color:"#c47d0a"},
+  {key:"Tourdot",label:"Tourdot / Vonthron / Ragoy",color:"#c0392b"},
+  {key:"Baudemont",label:"Baudemont / Jussaume / Bourdeix",color:"#b04a00"},
+  {key:"Cherrier",label:"Cherrier",color:"#2a8c5a"},
+];
+const activeLineages=new Set(LINEAGES.map(l=>l.key));
+
+(function buildFilterRows(){
+  const wrap=document.getElementById('filter-rows');
+  LINEAGES.forEach(lin=>{
+    const cnt=DATA.filter(a=>a.lineage===lin.key).length;
+    const row=document.createElement('div');
+    row.className='flt-row';
+    row.dataset.lineage=lin.key;
+    row.innerHTML=`<div class="flt-check on" style="background:${lin.color}"></div><span class="flt-lbl">${lin.label}</span><span class="flt-cnt">${cnt}</span>`;
+    row.addEventListener('click',()=>toggleLineage(lin.key));
+    wrap.appendChild(row);
+  });
+})();
+
+function toggleLineage(key){
+  if(activeLineages.has(key)) activeLineages.delete(key);
+  else activeLineages.add(key);
+  applyFilters();
+}
+window.filterAll=function(on){
+  LINEAGES.forEach(l=>{if(on) activeLineages.add(l.key); else activeLineages.delete(l.key)});
+  applyFilters();
+};
+function applyFilters(){
+  // Update UI rows
+  document.querySelectorAll('.flt-row').forEach(row=>{
+    const key=row.dataset.lineage;
+    const on=activeLineages.has(key);
+    row.classList.toggle('off',!on);
+    const chk=row.querySelector('.flt-check');
+    const lin=LINEAGES.find(l=>l.key===key);
+    chk.classList.toggle('on',on);
+    chk.style.background=on?lin.color:'transparent';
+  });
+  // Update markers
+  DATA.forEach(a=>{
+    const vis=activeLineages.has(a.lineage);
+    const m=markers[a.id];
+    if(vis&&!layerGroup.hasLayer(m)) layerGroup.addLayer(m);
+    if(!vis&&layerGroup.hasLayer(m)) layerGroup.removeLayer(m);
+  });
+  // Update timeline dots
+  DATA.forEach(a=>{
+    const td=document.getElementById('td-'+a.id);
+    if(td) td.style.display=activeLineages.has(a.lineage)?'':'none';
+  });
+}
+
+// ═══════════════════════════════
+//  TIMELINE
+// ═══════════════════════════════
+function pct(y){return((y-1640)/SPAN)*100}
+const epBar=document.getElementById('epoch-bar');
+EPOCHS.forEach(ep=>{
+  const seg=document.createElement('div');
+  seg.className='ep-seg';
+  seg.style.cssText=`width:${((ep.e-ep.s)/SPAN)*100}%;background:${ep.c}`;
+  seg.textContent=ep.name;
+  seg.title=`${ep.name} (${ep.s}–${ep.e})`;
+  seg.addEventListener('click',()=>seekEra(ep.s,ep.e));
+  epBar.appendChild(seg);
+});
+const dotRow=document.getElementById('dot-row');
+DATA.forEach(a=>{
+  if(!a.year)return;
+  const dot=document.createElement('div');
+  dot.className='tl-dot';dot.id='td-'+a.id;
+  dot.style.cssText=`left:${pct(a.year)}%;background:${a.color};color:${a.color}`;
+  dot.title=`${a.name} (${a.year})`;
+  dot.addEventListener('click',()=>openStory(a.id));
+  dotRow.appendChild(dot);
+});
+const sl=document.getElementById('yr-sl');
+const yrLbl=document.getElementById('yr-lbl');
+sl.addEventListener('input',()=>{
+  yrLbl.textContent=sl.value;
+  dimByYear(+sl.value);
+  document.getElementById('yr-hint').textContent=epochLabel(+sl.value);
+});
+function epochLabel(y){const ep=EPOCHS.find(e=>y>=e.s&&y<=e.e);return ep?ep.name:''}
+function dimByYear(y){
+  DATA.forEach(a=>{
+    if(!a.year)return;
+    const close=Math.abs(a.year-y)<60;
+    const el=markers[a.id]?.getElement();
+    if(el){const d=el.querySelector('.m-dot');if(d)d.classList.toggle('dim',!close)}
+    const td=document.getElementById('td-'+a.id);
+    if(td)td.classList.toggle('active',Math.abs(a.year-y)<30);
+  });
+}
+function seekEra(s,e){
+  const mid=Math.round((s+e)/2);sl.value=mid;yrLbl.textContent=mid;
+  dimByYear(mid);document.getElementById('yr-hint').textContent=epochLabel(mid);
+}
+
+// ═══════════════════════════════
+//  STORY PANEL
+// ═══════════════════════════════
+window.openStory=function(id){
+  const a=DATA.find(x=>x.id===id);if(!a)return;
+  map.flyTo([a.lat,a.lng],8,{duration:1.2});
+  document.querySelectorAll('.tl-dot').forEach(d=>d.classList.remove('active'));
+  const td=document.getElementById('td-'+id);
+  if(td){td.classList.add('active');sl.value=a.year||1800;yrLbl.textContent=a.year||'';}
+  const era=EPOCHS.find(ep=>a.year&&a.year>=ep.s&&a.year<=ep.e)||EPOCHS[0];
+
+  const musicLinks=(a.music||[]).map(m=>`
+    <a class="music-link" href="${m.url}" target="_blank" rel="noopener">
+      <div class="music-link-badge">&#9654;</div>
+      <div class="music-link-info">
+        <div class="music-link-title">${m.label}</div>
+        <div class="music-link-sub">${m.sub}</div>
+      </div>
+      <div class="music-link-yt">YouTube</div>
+    </a>`).join('');
+
+  document.getElementById('story-body').innerHTML=`
+    <div class="s-header">
+      <div class="s-badge" style="background:${era.c};color:rgba(255,255,255,.85)">${era.name}</div>
+      <div class="s-name">${a.name}</div>
+      <div class="s-dates">${a.place}${a.year?' — '+a.year:''}</div>
+      <div class="s-relation">${a.relation}</div>
+    </div>
+    ${a.img?`<div class="s-img-wrap" id="img-wrap-${id}">
+      <img src="${a.img}" alt="${a.imgCaption||''}" loading="lazy"
+        onerror="document.getElementById('img-wrap-${id}').style.display='none'"
+        onload="this.style.opacity=1">
+      ${a.imgCaption?`<div class="s-img-cap">${a.imgCaption}</div>`:''}
+    </div>`:''}
+    <div class="s-body">
+      <div class="s-block">
+        <div class="s-block-title">Contexte historique</div>
+        <div class="s-block-text">${a.epoque}</div>
+      </div>
+      <div class="s-block">
+        <div class="s-block-title">Personnalite de reference</div>
+        <div class="celeb">
+          <div class="celeb-av" style="background:${a.celeb.bg}">${a.celeb.av}</div>
+          <div class="celeb-info"><div class="celeb-name">${a.celeb.name}</div>${a.celeb.text}</div>
+        </div>
+      </div>
+      <div class="s-funfact">
+        <div class="s-block-title">Fait remarquable</div>
+        <div class="s-block-text">${a.funfact}</div>
+      </div>
+      <div class="s-music">
+        <div class="s-block-title">Musique de l'epoque</div>
+        <div class="s-music-desc">${a.musicDesc}</div>
+        <div class="music-links">${musicLinks}</div>
+      </div>
+    </div>`;
+  document.getElementById('story').classList.add('open');
+  document.getElementById('story-body').scrollTop=0;
+  document.getElementById('hdr-sub').textContent=a.name+' — '+(a.year||'');
+};
+
+window.closeStory=function(){
+  document.getElementById('story').classList.remove('open');
+  document.getElementById('hdr-sub').textContent='Genealogie Tourdot-Cherrier';
+};
+window.toggleFilter=function(){document.getElementById('filter-panel').classList.toggle('vis')};
+sl.value=1640;yrLbl.textContent=1640;
+</script>
+</body>
+</html>
